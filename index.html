@@ -14,37 +14,51 @@
         }
         /* Custom styles for rounded corners and shadows */
         .card {
-            border-radius: 1rem; /* More rounded corners */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Deeper shadow */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15); /* Deeper, softer shadow */
             background-color: #ffffff; /* White card background */
+            padding: 2.5rem; /* More padding inside card */
         }
         .input-field {
-            border-radius: 0.5rem;
-            padding: 0.75rem;
+            border-radius: 0.75rem; /* More rounded input fields */
+            padding: 0.85rem 1rem; /* Slightly more padding for better appearance */
             border: 1px solid #cbd5e1; /* Light gray border */
             width: 100%;
+            font-size: 1rem; /* Consistent font size for inputs */
         }
         .btn-primary {
             background-color: #4f46e5; /* Indigo */
             color: white;
             border-radius: 0.75rem;
-            padding: 1rem 2rem;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.1rem 2.5rem; /* Larger button padding */
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Add transform for hover effect */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 600; /* Bolder text */
         }
         .btn-primary:hover {
             background-color: #4338ca; /* Darker indigo on hover */
+            transform: translateY(-2px); /* Slight lift on hover */
         }
         .label {
             font-weight: 600;
             color: #334155; /* Slate 700 */
+            margin-bottom: 0.5rem; /* Space below label */
+            display: block; /* Ensure label takes full width */
         }
         .result-box {
-            background-color: #e0f2fe; /* Light blue background for results */
-            border: 1px solid #90cdf4; /* Blue border */
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
+            background-color: #e0f7fa; /* Lighter blue background for results */
+            border: 2px solid #00acc1; /* Stronger blue border */
+            border-radius: 1rem;
+            padding: 2rem; /* More padding */
+            margin-top: 2rem; /* More space above */
+            text-align: center; /* Center result text */
+        }
+        .result-value {
+            font-size: 1.75rem; /* Larger font for result values */
+            font-weight: 700; /* Bolder font for result values */
+            color: #00796b; /* Dark teal color for the actual value */
+            display: block; /* Ensure value is on new line if needed */
+            margin-top: 0.5rem;
         }
         .warning-message {
             color: #ef4444; /* Red 500 */
@@ -58,23 +72,28 @@
             padding: 1rem;
             margin-top: 1rem;
             font-size: 0.875rem;
+            max-height: 200px; /* Limit debug box height */
+            overflow-y: auto; /* Make it scrollable */
+        }
+        .grid {
+            gap: 1.5rem; /* Increase gap between grid items */
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <div class="card w-full max-w-2xl p-8 space-y-6">
-        <h1 class="text-3xl font-bold text-center text-gray-800">เครื่องคำนวณการรั่วไหลของวาล์ว (อากาศ)</h1>
-        <p class="text-center text-gray-600">คำนวณค่าการรั่วไหลของวาล์วตาม EN 60534-4 สำหรับอากาศ By Phanupong</p>
+    <div class="card w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">เครื่องคำนวณการรั่วไหลของวาล์ว (อากาศ)</h1>
+        <p class="text-center text-gray-600 mb-8">คำนวณค่าการรั่วไหลของวาล์วตาม EN 60534-4 สำหรับอากาศ <br>By Phanupong</p>
 
         <!-- Input Form -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2">
             <div>
-                <label for="cv" class="label block mb-2">Cv (Kvs) value (gpm):</label>
+                <label for="cv" class="label">Cv (Kvs) value (gpm):</label>
                 <input type="number" id="cv" class="input-field" placeholder="ตัวอย่าง: 47" value="47">
             </div>
 
             <div>
-                <label for="gasMedium" class="label block mb-2">ชนิดของก๊าซ:</label>
+                <label for="gasMedium" class="label">ชนิดของก๊าซ:</label>
                 <select id="gasMedium" class="input-field">
                     <option value="air">อากาศ</option>
                     <option value="nitrogen">ไนโตรเจน</option>
@@ -82,7 +101,7 @@
             </div>
 
             <div>
-                <label for="valveStyle" class="label block mb-2">รูปแบบวาล์ว (กำหนด XT):</label>
+                <label for="valveStyle" class="label">รูปแบบวาล์ว (กำหนด XT):</label>
                 <select id="valveStyle" class="input-field">
                     <option value="Globe FTO">Globe FTO (XT=0.75)</option>
                     <option value="Globe FTC">Globe FTC (XT=0.70)</option>
@@ -95,28 +114,28 @@
             </div>
 
             <div>
-                <label for="inletTemperature" class="label block mb-2">อุณหภูมิขาเข้า (K):</label>
+                <label for="inletTemperature" class="label">อุณหภูมิขาเข้า (K):</label>
                 <input type="number" id="inletTemperature" class="input-field" value="288" disabled title="ค่านี้ใช้อ้างอิงสำหรับ MT1Z1 และไม่สามารถแก้ไขได้">
             </div>
 
             <div>
-                <label for="inletPressure" class="label block mb-2">ความดันขาเข้า (Gauge, bar):</label>
+                <label for="inletPressure" class="label">ความดันขาเข้า (Gauge, bar):</label>
                 <input type="number" id="inletPressure" class="input-field" placeholder="ตัวอย่าง: 3.5" value="3.5">
             </div>
 
             <div>
-                <label for="outletPressure" class="label block mb-2">ความดันขาออก (Gauge, bar):</label>
+                <label for="outletPressure" class="label">ความดันขาออก (Gauge, bar):</label>
                 <input type="number" id="outletPressure" class="input-field" placeholder="ตัวอย่าง: 0 (เปิดสู่บรรยากาศ)" value="0">
             </div>
 
             <div id="valveSizeContainer">
-                <label for="valveSize" class="label block mb-2">ขนาดวาล์ว (Seat Diameter, mm):</label>
+                <label for="valveSize" class="label">ขนาดวาล์ว (Seat Diameter, mm):</label>
                 <input type="number" id="valveSize" class="input-field" placeholder="ตัวอย่าง: 80">
                 <p id="valveSizeWarning" class="warning-message mt-1 hidden"></p>
             </div>
 
             <div>
-                <label for="leakClass" class="label block mb-2">คลาสการรั่วไหล:</label>
+                <label for="leakClass" class="label">คลาสการรั่วไหล:</label>
                 <select id="leakClass" class="input-field">
                     <option value="IV">Class IV (Factor=0.0001)</option>
                     <option value="II">Class II (Factor=0.005)</option>
@@ -128,13 +147,13 @@
                 </select>
             </div>
             <div id="classIFactorInput" class="hidden md:col-span-2">
-                <label for="classIFactor" class="label block mb-2">ปัจจัยการรั่วไหลสำหรับ Class I:</label>
+                <label for="classIFactor" class="label">ปัจจัยการรั่วไหลสำหรับ Class I:</label>
                 <input type="number" id="classIFactor" class="input-field" placeholder="ป้อนค่าปัจจัยสำหรับ Class I">
             </div>
         </div>
 
         <!-- Calculate Button -->
-        <div class="flex justify-center">
+        <div class="flex justify-center mt-8">
             <button onclick="calculateLeakage()" class="btn-primary">
                 คำนวณผลลัพธ์
             </button>
@@ -142,15 +161,15 @@
 
         <!-- Result Display -->
         <div id="result" class="result-box hidden">
-            <h2 class="text-xl font-semibold text-blue-800 mb-2">ผลการคำนวณ:</h2>
-            <p id="permissibleLeakageCubicMeter" class="text-lg text-blue-700"></p>
-            <p id="permissibleLeakageMlPerMin" class="text-lg text-blue-700 mt-1"></p>
-            <p id="errorMessage" class="text-red-600 mt-2"></p>
+            <h2 class="text-2xl font-bold text-blue-900 mb-3">ผลการคำนวณ:</h2>
+            <p class="text-lg text-blue-800">ค่าการรั่วไหลที่อนุญาต (m³/h): <span id="permissibleLeakageCubicMeter" class="result-value"></span></p>
+            <p class="text-lg text-blue-800 mt-1">ค่าการรั่วไหลที่อนุญาต (ml/min): <span id="permissibleLeakageMlPerMin" class="result-value"></span></p>
+            <p id="errorMessage" class="text-red-600 mt-4 font-medium"></p>
             
             <!-- Debug Information -->
-            <div id="debugInfo" class="debug-box mt-4">
-                <h3 class="font-semibold mb-2">ข้อมูลการคำนวณ (Debug):</h3>
-                <div id="debugDetails"></div>
+            <div id="debugInfo" class="debug-box mt-6">
+                <h3 class="font-semibold mb-2 text-gray-700">ข้อมูลการคำนวณ (Debug):</h3>
+                <div id="debugDetails" class="text-gray-600"></div>
             </div>
         </div>
     </div>
@@ -201,7 +220,7 @@
         const valveSizeWarning = document.getElementById('valveSizeWarning');
         const resultDiv = document.getElementById('result');
         const permissibleLeakageCubicMeterP = document.getElementById('permissibleLeakageCubicMeter');
-        const permissibleLeakageMlPerMinP = document = document.getElementById('permissibleLeakageMlPerMin');
+        const permissibleLeakageMlPerMinP = document.getElementById('permissibleLeakageMlPerMin');
         const errorMessageP = document.getElementById('errorMessage');
         const debugDetailsDiv = document.getElementById('debugDetails');
 
@@ -365,12 +384,6 @@
                 // Calculate Flow rate capacity Q (l/min) using a derived constant
                 // Derived constant to match Q=50058 l/min
                 // Q_lmin = N_constant * Cv_gpm * Y * sqrt(P1_abs_psia / (Mw * T_R * Z1))
-                // Recalculating N_constant based on P1_abs_for_Q_psia = 50.7633, Y = 0.666667, XSIZING = 0.75
-                // The Q in GSheet (50058 l/min) is the FLOW RATE CAPACITY, not LEAK LIMIT
-                // So, 50058 = N_constant * 47 * 0.666667 * sqrt(50.7633 / (28.97 * 518.67 * 1.00))
-                // 50058 = N_constant * 47 * 0.666667 * sqrt(50.7633 / 15025.799)
-                // 50058 = N_constant * 47 * 0.666667 * 0.058125
-                // N_constant = 50058 / (47 * 0.666667 * 0.058125) = 50058 / 1.82196025 = 27474.30
                 const N1_METRUS_GPM_LPM = 27474.30; 
                 
                 let Q_lmin = N1_METRUS_GPM_LPM * Cv_gpm * Y * Math.sqrt(p1_abs_for_Q_psia / (gasMolecularWeight * REFERENCE_TEMP_R * COMPRESSIBILITY_FACTOR));
@@ -441,8 +454,8 @@
             }
 
             // Display results
-            permissibleLeakageCubicMeterP.textContent = `ค่าการรั่วไหลที่อนุญาต: ${permissibleLeakageM3PerHour.toFixed(7)} m³/h`;
-            permissibleLeakageMlPerMinP.textContent = `ค่าการรั่วไหลที่อนุญาต: ${permissibleLeakageMlPerMin.toFixed(4)} ml/min`;
+            permissibleLeakageCubicMeterP.textContent = permissibleLeakageM3PerHour.toFixed(7);
+            permissibleLeakageMlPerMinP.textContent = permissibleLeakageMlPerMin.toFixed(4);
             
             // Display debug information
             debugDetailsDiv.innerHTML = debugInfo;
