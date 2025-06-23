@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องคำนวณการรั่วไหลของวาล์ว (อากาศ) - ปรับปรุงแล้ว</title>
-    <!-- Tailwind CSS CDN -->
+    <title>เครื่องคำนวณการรั่วไหลของวาล์ว (อากาศ/ไนโตรเจน) - อัปเดตแรงดัน</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for Inter font */
@@ -82,12 +81,20 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="card w-full max-w-2xl">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">เครื่องคำนวณการรั่วไหลของวาล์ว (อากาศ)</h1>
-        <p class="text-center text-gray-600 mb-8">คำนวณค่าการรั่วไหลของวาล์วตาม EN 60534-4 สำหรับอากาศ <br>By Phanupong</p>
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">เครื่องคำนวณการรั่วไหลของวาล์ว (อากาศ/ไนโตรเจน)</h1>
+        <p class="text-center text-gray-600 mb-8">คำนวณค่าการรั่วไหลของวาล์วตามมาตรฐานต่างๆ <br>By Phanupong</p>
 
-        <!-- Input Form -->
         <div class="grid grid-cols-1 md:grid-cols-2">
             <div>
+                <label for="standardSelect" class="label">มาตรฐาน:</label>
+                <select id="standardSelect" class="input-field">
+                    <option value="ANSI/FCI">ANSI/FCI 70-2-2006</option>
+                    <option value="ISO_5208">ISO 5208 Third edition</option>
+                    <option value="API_598">API 598 Eighth edition</option>
+                </select>
+            </div>
+
+            <div id="cvContainer">
                 <label for="cv" class="label">Cv (Kvs) value (gpm):</label>
                 <input type="number" id="cv" class="input-field" placeholder="ตัวอย่าง: 47" value="47">
             </div>
@@ -96,26 +103,7 @@
                 <label for="gasMedium" class="label">ชนิดของก๊าซ:</label>
                 <select id="gasMedium" class="input-field">
                     <option value="air">อากาศ</option>
-                    <option value="nitrogen">ไนโตรเจน</option>
-                </select>
-            </div>
-
-            <div>
-                <label for="valveStyle" class="label">รูปแบบวาล์ว (กำหนด XT):</label>
-                <select id="valveStyle" class="input-field">
-                    <option value="Globe FTO">Globe FTO (XT=0.75)</option>
-                    <option value="Globe FTC">Globe FTC (XT=0.70)</option>
-                    <option value="Butterfly">Butterfly (XT=0.35)</option>
-                    <option value="Ball">Ball (XT=0.32)</option>
-                    <option value="Segment Ball">Segment Ball (XT=0.25)</option>
-                    <option value="Plug V-port">Plug V-port (XT=0.70)</option>
-                    <option value="Globe hole drilled cage">Globe hole drilled cage (XT=0.68)</option>
-                </select>
-            </div>
-
-            <div>
-                <label for="inletTemperature" class="label">อุณหภูมิขาเข้า (K):</label>
-                <input type="number" id="inletTemperature" class="input-field" value="288" disabled title="ค่านี้ใช้อ้างอิงสำหรับ MT1Z1 และไม่สามารถแก้ไขได้">
+                    <option value="nitrogen" selected>ไนโตรเจน</option> </select>
             </div>
 
             <div>
@@ -123,28 +111,21 @@
                 <input type="number" id="inletPressure" class="input-field" placeholder="ตัวอย่าง: 3.5" value="3.5">
             </div>
 
-            <div>
+            <div id="outletPressureContainer" class="hidden">
                 <label for="outletPressure" class="label">ความดันขาออก (Gauge, bar):</label>
-                <input type="number" id="outletPressure" class="input-field" placeholder="ตัวอย่าง: 0 (เปิดสู่บรรยากาศ)" value="0">
+                <input type="hidden" id="outletPressure" value="0">
             </div>
 
-            <div id="valveSizeContainer">
-                <label for="valveSize" class="label">ขนาดวาล์ว (Seat Diameter, mm):</label>
-                <input type="number" id="valveSize" class="input-field" placeholder="ตัวอย่าง: 80">
+            <div id="valveSizeContainer" class="hidden">
+                <label for="valveSize" class="label">ขนาดวาล์ว (Seat Diameter, inches):</label>
+                <input type="number" id="valveSize" class="input-field" placeholder="ตัวอย่าง: 4 (สำหรับ 4 นิ้ว)">
                 <p id="valveSizeWarning" class="warning-message mt-1 hidden"></p>
             </div>
 
             <div>
                 <label for="leakClass" class="label">คลาสการรั่วไหล:</label>
                 <select id="leakClass" class="input-field">
-                    <option value="IV">Class IV (Factor=0.0001)</option>
-                    <option value="II">Class II (Factor=0.005)</option>
-                    <option value="III">Class III (Factor=0.001)</option>
-                    <option value="IV-S1">Class IV-S1 (Factor=0.000005)</option>
-                    <option value="I">Class I (Factor=as agreed, requires manual input)</option>
-                    <option value="V">Class V (Air/Gas)</option>
-                    <option value="VI">Class VI (Air/Gas)</option>
-                </select>
+                    </select>
             </div>
             <div id="classIFactorInput" class="hidden md:col-span-2">
                 <label for="classIFactor" class="label">ปัจจัยการรั่วไหลสำหรับ Class I:</label>
@@ -152,21 +133,18 @@
             </div>
         </div>
 
-        <!-- Calculate Button -->
         <div class="flex justify-center mt-8">
             <button onclick="calculateLeakage()" class="btn-primary">
                 คำนวณผลลัพธ์
             </button>
         </div>
 
-        <!-- Result Display -->
         <div id="result" class="result-box hidden">
             <h2 class="text-2xl font-bold text-blue-900 mb-3">ผลการคำนวณ:</h2>
             <p class="text-lg text-blue-800">ค่าการรั่วไหลที่อนุญาต (m³/h): <span id="permissibleLeakageCubicMeter" class="result-value"></span></p>
             <p class="text-lg text-blue-800 mt-1">ค่าการรั่วไหลที่อนุญาต (ml/min): <span id="permissibleLeakageMlPerMin" class="result-value"></span></p>
             <p id="errorMessage" class="text-red-600 mt-4 font-medium"></p>
             
-            <!-- Debug Information -->
             <div id="debugInfo" class="debug-box mt-6">
                 <h3 class="font-semibold mb-2 text-gray-700">ข้อมูลการคำนวณ (Debug):</h3>
                 <div id="debugDetails" class="text-gray-600"></div>
@@ -175,19 +153,11 @@
     </div>
 
     <script>
-        // Mapping for XT values based on valve style
-        const XT_VALUES = {
-            "Globe FTO": 0.75,
-            "Globe FTC": 0.70,
-            "Butterfly": 0.35,
-            "Ball": 0.32,
-            "Segment Ball": 0.25,
-            "Plug V-port": 0.70,
-            "Globe hole drilled cage": 0.68
-        };
+        // Fixed XT for ANSI/FCI standard
+        const FIXED_XT_ANSI_FCI = 0.75; 
 
-        // Mapping for Leakage Factors based on leak class
-        const LEAK_CLASS_FACTORS = {
+        // Mapping for Leakage Factors based on leak class (ANSI/FCI)
+        const ANSI_FCI_LEAK_CLASS_FACTORS = {
             "II": 0.005,
             "III": 0.001,
             "IV": 0.0001,
@@ -195,67 +165,202 @@
             "I": null, // Special case, factor "as agreed"
         };
 
-        // LFml/min values for Class VI based on valve seat diameter
-        const LF_ML_PER_MIN_CLASS_VI = {
-            25: 0.15,
-            40: 0.30,
-            50: 0.45,
-            65: 0.60,
-            80: 0.90,
-            100: 1.70,
-            150: 4.00,
-            200: 6.75,
-            250: 11.1,
-            300: 16.0,
-            350: 21.6,
-            400: 28.4
+        // New constant for Class VI leakage (ml/min) based on user's fixed values (from last prompt)
+        const ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES = {
+            "1": 0.15,
+            "1.5": 0.30,
+            "2": 0.45,
+            "2.5": 0.60,
+            "3": 0.90,
+            "4": 1.70,
+            "6": 4.00,
+            "8": 6.75,
+            "10": 11.1,
+            "12": 16.0,
+            "14": 21.6, 
+            "16": 28.4  
         };
 
+        // New constant for Class V leakage (ml/min) based on user's fixed values (image_b5bc01.png)
+        const ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES = {
+            "1": 4.7,
+            "1.5": 7.05,
+            "2": 9.4,
+            "2.5": 11.75,
+            "3": 14.1,
+            "4": 18.8,
+            "6": 28.2,
+            "8": 37.6,
+            "10": 47,
+            "12": 56.4,
+            "14": 65.8,
+            "16": 75.2,
+        };
+
+
+        // ISO 5208 Third edition - Maximum Acceptable Leakage (ml/min) based on INCHES
+        // Updated with values from image_b5d75b.png
+        const ISO_5208_LEAKAGE_ML_PER_MIN_INCHES = {
+            "rate a": {
+                "1": 0, "1.5": 0, "2": 0, "2.5": 0, "3": 0, "4": 0, "6": 0, "8": 0, "10": 0, "12": 0, "14": 0, "16": 0
+            },
+            "rate b": {
+                "1": 0.45, "1.5": 0.72, "2": 0.9, "2.5": 1.17, "3": 1.44, "4": 1.8, "6": 2.7, "8": 3.6, "10": 4.5, "12": 5.4, "14": 6.3, "16": 7.2
+            },
+            "rate c": {
+                "1": 4.5, "1.5": 7.2, "2": 9, "2.5": 11.7, "3": 14.4, "4": 18, "6": 27, "8": 36, "10": 45, "12": 54, "14": 63, "16": 72
+            },
+            "rate d": {
+                "1": 45, "1.5": 72, "2": 90, "2.5": 117, "3": 144, "4": 180, "6": 270, "8": 360, "10": 450, "12": 540, "14": 630, "16": 720
+            }
+        };
+
+        // API 598 Eighth edition - Low Pressure Test - Maximum Acceptable Leakage (ml/min) based on INCHES
+        const API_598_LEAKAGE_ML_PER_MIN_INCHES = {
+            "1": 0, "1.5": 0, "2": 0, "2.5": 3.6, "3": 3.6, "4": 3.6, "6": 3.6, "8": 6, "10": 6, "12": 6, "14": 8.4, "16": 9.6
+        };
+
+        // Standard valve sizes in inches from the tables (ISO/API, and now ANSI/FCI V/VI), for lookup validation
+        const STANDARD_VALVE_INCH_SIZES = [1, 1.5, 2, 2.5, 3, 4, 6, 8, 10, 12, 14, 16]; // General sizes for ISO/API
+        const ANSI_FCI_V_VI_VALVE_INCH_SIZES = Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES).map(Number).sort((a,b)=>a-b); // Dynamic from Class V table
+        // Combine all possible sizes for input validation for ANSI/FCI V/VI.
+        const ALL_ANSI_FCI_V_VI_INCH_SIZES = [...new Set([...Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES).map(Number), ...Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES).map(Number)])].sort((a,b)=>a-b);
+
+
         // Get references to elements
+        const standardSelect = document.getElementById('standardSelect');
         const leakClassSelect = document.getElementById('leakClass');
         const classIFactorInputDiv = document.getElementById('classIFactorInput');
         const classIFactorInput = document.getElementById('classIFactor');
         const valveSizeContainer = document.getElementById('valveSizeContainer');
         const valveSizeInput = document.getElementById('valveSize');
         const valveSizeWarning = document.getElementById('valveSizeWarning');
+        const inletPressureInput = document.getElementById('inletPressure');
+        const cvContainer = document.getElementById('cvContainer'); // Get Cv container
+        const cvInput = document.getElementById('cv'); // Get Cv input field
         const resultDiv = document.getElementById('result');
         const permissibleLeakageCubicMeterP = document.getElementById('permissibleLeakageCubicMeter');
         const permissibleLeakageMlPerMinP = document.getElementById('permissibleLeakageMlPerMin');
         const errorMessageP = document.getElementById('errorMessage');
         const debugDetailsDiv = document.getElementById('debugDetails');
 
-        // Event listener to show/hide Class I factor input and valve size based on leak class
+        // Helper function to add options to a select element
+        function addOption(selectElement, text, value) {
+            const option = document.createElement('option');
+            option.textContent = text;
+            option.value = value;
+            selectElement.appendChild(option);
+        }
+
+        // Function to update leak class options and field visibility based on standard
+        function updateLeakClassOptions() {
+            const selectedStandard = standardSelect.value;
+            leakClassSelect.innerHTML = ''; // Clear existing options
+            valveSizeContainer.classList.add('hidden'); // Hide valve size by default
+            valveSizeWarning.classList.add('hidden'); // Hide warning by default
+            classIFactorInputDiv.classList.add('hidden'); // Hide Class I factor by default
+
+            // Reset error messages and enable/disable pressure and Cv fields
+            errorMessageP.textContent = '';
+            resultDiv.classList.add('hidden'); // Hide results when standard changes
+            inletPressureInput.disabled = false; // Enable by default
+            cvContainer.classList.remove('hidden'); // Show Cv by default
+
+            if (selectedStandard === 'ANSI/FCI') {
+                inletPressureInput.value = "3.5"; // Default for ANSI/FCI
+                cvInput.value = "47"; // Default Cv for ANSI/FCI
+
+                addOption(leakClassSelect, 'Class IV (Factor=0.0001)', 'IV');
+                addOption(leakClassSelect, 'Class II (Factor=0.005)', 'II');
+                addOption(leakClassSelect, 'Class III (Factor=0.001)', 'III');
+                addOption(leakClassSelect, 'Class IV-S1 (Factor=0.000005)', 'IV-S1');
+                addOption(leakClassSelect, 'Class I (Factor=as agreed, requires manual input)', 'I');
+                addOption(leakClassSelect, 'Class V (Air/Gas)', 'V');
+                addOption(leakClassSelect, 'Class VI (Air/Gas)', 'VI');
+                
+                leakClassSelect.value = 'IV'; // Set a default leak class for ANSI/FCI
+                leakClassSelect.dispatchEvent(new Event('change')); // Trigger change event to handle Class I factor or valve size visibility
+            } else if (selectedStandard === 'ISO_5208') {
+                inletPressureInput.value = "5"; // Fixed for ISO as requested
+                inletPressureInput.disabled = true;
+                cvContainer.classList.add('hidden'); // Hide Cv for ISO
+                cvInput.value = ''; // Clear Cv value when hidden
+
+                valveSizeContainer.classList.remove('hidden'); // Show valve size for ISO/API
+                valveSizeWarning.classList.remove('hidden');
+                valveSizeWarning.textContent = `โปรดป้อนขนาดวาล์ว (นิ้ว) ที่ตรงกับค่ามาตรฐาน (${STANDARD_VALVE_INCH_SIZES.join(', ')})`;
+                
+                addOption(leakClassSelect, 'Rate A', 'rate a');
+                addOption(leakClassSelect, 'Rate B', 'rate b');
+                addOption(leakClassSelect, 'Rate C', 'rate c');
+                addOption(leakClassSelect, 'Rate D', 'rate d');
+                leakClassSelect.value = 'rate a'; // Set a default leak class for ISO
+            } else if (selectedStandard === 'API_598') {
+                inletPressureInput.value = "5"; // Fixed for API as requested
+                inletPressureInput.disabled = true;
+                cvContainer.classList.add('hidden'); // Hide Cv for API
+                cvInput.value = ''; // Clear Cv value when hidden
+
+                valveSizeContainer.classList.remove('hidden'); // Show valve size for ISO/API
+                valveSizeWarning.classList.remove('hidden');
+                valveSizeWarning.textContent = `โปรดป้อนขนาดวาล์ว (นิ้ว) ที่ตรงกับค่ามาตรฐาน (${STANDARD_VALVE_INCH_SIZES.join(', ')})`;
+                
+                addOption(leakClassSelect, 'Low Pressure Test', 'Low Pressure Test');
+                leakClassSelect.value = 'Low Pressure Test'; // Set a default leak class for API
+            }
+        }
+
+        // Event listener for standard select change
+        standardSelect.addEventListener('change', updateLeakClassOptions);
+
+
+        // Event listener to show/hide Class I factor input and valve size based on leak class (for ANSI/FCI)
         leakClassSelect.addEventListener('change', (event) => {
             const selectedClass = event.target.value;
-            // Handle Class I factor input visibility
-            if (selectedClass === 'I') {
-                classIFactorInputDiv.classList.remove('hidden');
-            } else {
-                classIFactorInputDiv.classList.add('hidden');
-                classIFactorInput.value = ''; // Clear the value when hidden
+            const selectedStandard = standardSelect.value;
+
+            // Reset inletPressureInput state to default ANSI/FCI or specific ISO/API
+            if (selectedStandard === 'ANSI/FCI') {
+                inletPressureInput.disabled = false; // Re-enable for other ANSI/FCI classes
+                inletPressureInput.value = "3.5"; // Set default ANSI/FCI pressure
+            } else { // ISO/API
+                inletPressureInput.disabled = true;
+                inletPressureInput.value = "5"; // Set default ISO/API pressure
             }
 
-            // Handle Valve Size input visibility and warning
-            if (selectedClass === 'V' || selectedClass === 'VI') {
-                valveSizeContainer.classList.remove('hidden');
-                valveSizeWarning.classList.add('hidden');
-            } else {
-                valveSizeContainer.classList.remove('hidden'); // Keep visible but add warning
-                valveSizeInput.value = ''; // Clear value if not directly used
-                valveSizeWarning.classList.remove('hidden');
-                valveSizeWarning.textContent = 'ขนาดวาล์ว (Seat Diameter) ไม่ได้ใช้ในการคำนวณสำหรับคลาสนี้';
+            // Handle Class I factor input visibility (only for ANSI/FCI)
+            if (selectedStandard === 'ANSI/FCI') {
+                if (selectedClass === 'I') {
+                    classIFactorInputDiv.classList.remove('hidden');
+                } else {
+                    classIFactorInputDiv.classList.add('hidden');
+                    classIFactorInput.value = ''; // Clear the value when hidden
+                }
+
+                if (selectedClass === 'V' || selectedClass === 'VI') {
+                    valveSizeContainer.classList.remove('hidden');
+                    valveSizeWarning.classList.remove('hidden'); // Show warning for V/VI
+                    valveSizeWarning.textContent = `โปรดป้อนขนาดวาล์ว (นิ้ว) ที่ตรงกับค่ามาตรฐาน (${ALL_ANSI_FCI_V_VI_INCH_SIZES.join(', ')})`;
+                    inletPressureInput.value = "3.5"; // Enforce pressure in UI
+                    inletPressureInput.disabled = true; // Disable if enforced
+                } else {
+                    valveSizeContainer.classList.add('hidden'); // Hide if not V or VI
+                    valveSizeInput.value = ''; // Clear value if hidden
+                    valveSizeWarning.classList.add('hidden'); // Hide warning if not V/VI
+                    // Pressure input already reset above for non V/VI ANSI/FCI
+                }
+            } else { // For ISO/API
+                classIFactorInputDiv.classList.add('hidden'); // Hide for ISO/API
+                classIFactorInput.value = '';
+                // Valve size and pressure handling for ISO/API already handled by standardSelect change
             }
         });
 
-        // Initialize valve size warning based on default selected leak class
+        // Initial call to set up options on page load
         document.addEventListener('DOMContentLoaded', () => {
-            const initialLeakClass = leakClassSelect.value;
-            if (initialLeakClass === 'V' || initialLeakClass === 'VI') {
-                valveSizeWarning.classList.add('hidden');
-            } else {
-                valveSizeWarning.classList.remove('hidden');
-                valveSizeWarning.textContent = 'ขนาดวาล์ว (Seat Diameter) ไม่ได้ใช้ในการคำนวณสำหรับคลาสนี้';
-            }
+            updateLeakClassOptions();
+            // Trigger change on leakClassSelect for initial state (e.g., if default is V or VI)
+            leakClassSelect.dispatchEvent(new Event('change'));
         });
 
 
@@ -268,189 +373,275 @@
             debugDetailsDiv.innerHTML = ''; // Clear debug info
 
             // Get input values
+            const selectedStandard = standardSelect.value;
             let Cv_gpm = parseFloat(document.getElementById('cv').value); // Cv in gpm
             const gasMedium = document.getElementById('gasMedium').value;
-            const valveStyle = document.getElementById('valveStyle').value;
-            const inletPressureGauge = parseFloat(document.getElementById('inletPressure').value);
-            const outletPressureGauge = parseFloat(document.getElementById('outletPressure').value);
-            const valveSize = parseFloat(document.getElementById('valveSize').value); // Used for Class V and VI
+            let inletPressureGauge = parseFloat(document.getElementById('inletPressure').value); // Use 'let' as it might be overridden
+            const outletPressureGauge = 0; // Hardcoded to 0 as per user request
+            let valveSizeInches = parseFloat(document.getElementById('valveSize').value); // Now input is in inches
             const leakClass = document.getElementById('leakClass').value;
 
             // Input validation for common fields
-            if (isNaN(inletPressureGauge) || isNaN(outletPressureGauge)) {
-                errorMessageP.textContent = 'โปรดป้อนค่าตัวเลขที่ถูกต้องสำหรับความดันขาเข้า และความดันขาออก';
+            if (isNaN(inletPressureGauge)) { 
+                errorMessageP.textContent = 'โปรดป้อนค่าตัวเลขที่ถูกต้องสำหรับความดันขาเข้า';
                 resultDiv.classList.remove('hidden');
                 return;
             }
-            if (inletPressureGauge < 0 || outletPressureGauge < 0) {
+            if (inletPressureGauge < 0) { 
                 errorMessageP.textContent = 'ความดันต้องเป็นค่าบวกหรือศูนย์';
                 resultDiv.classList.remove('hidden');
                 return;
             }
-            if (inletPressureGauge < outletPressureGauge) {
-                errorMessageP.textContent = 'ความดันขาเข้าต้องมากกว่าหรือเท่ากับความดันขาออก';
-                resultDiv.classList.remove('hidden');
-                return;
-            }
-
-            // Constants based on Metrus App calculation from provided screenshots
-            const BAR_TO_PSI = 14.5038; // Conversion factor from bar to psi
-            const AMBIENT_PRESSURE_PSI = 14.7; // Standard atmospheric pressure in psia, used in X calculation
-
-            // Gas properties from Google Sheet screenshot (assuming these are constant for Air)
-            const MOLECULAR_WEIGHT_AIR = 28.97; // kg/kmol
-            const SPECIFIC_HEAT_RATIO_AIR_FK = 1.00; // Fk as seen in GSheet, not actual k of air
-            const COMPRESSIBILITY_FACTOR = 1.00; // Z1
-            const REFERENCE_TEMP_R = 518.67; // °R (15°C = 288K = 518.67°R)
-            const FP = 1; // Pipe geometry factor, always 1
-
-            let gasMolecularWeight;
             
-            // Fk in the GSheet is specificHeatRatioFactor in the formula for Y.
-            // It is explicitly 1.0 in the GSheet, not the actual specific heat ratio of the gas.
-            const Fk = SPECIFIC_HEAT_RATIO_AIR_FK; 
-            
-            if (gasMedium === 'air') {
-                gasMolecularWeight = MOLECULAR_WEIGHT_AIR;
-            } else if (gasMedium === 'nitrogen') {
-                gasMolecularWeight = 28.014; // Standard Molecular Weight for N2 (Nitrogen)
-            } else {
-                errorMessageP.textContent = 'ชนิดของก๊าซไม่ถูกต้อง';
-                resultDiv.classList.remove('hidden');
-                return;
-            }
-
             let permissibleLeakageM3PerHour = 0;
             let permissibleLeakageMlPerMin = 0;
             let debugInfo = '';
 
-            // --- Calculation based on Leak Class ---
-            if (['II', 'III', 'IV', 'IV-S1', 'I'].includes(leakClass)) {
-                // Validation for Cv for Classes I-IV-S1
-                if (isNaN(Cv_gpm) || Cv_gpm <= 0) {
-                    errorMessageP.textContent = 'โปรดป้อนค่า Cv ที่ถูกต้องและเป็นค่าบวกสำหรับคลาสนี้';
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-                const XT = XT_VALUES[valveStyle];
-                if (XT === undefined) {
-                    errorMessageP.textContent = 'รูปแบบวาล์วไม่ถูกต้องหรือไม่มีค่า XT กำหนดไว้';
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-                // Convert gauge bar pressures to psia
-                // P_gauge_psia = P_gauge_bar * BAR_TO_PSI
-                const inletPressureGauge_psia = inletPressureGauge * BAR_TO_PSI;
-                const outletPressureGauge_psia = outletPressureGauge * BAR_TO_PSI;
+            // --- Calculation based on selected Standard ---
+            if (selectedStandard === 'ANSI/FCI') {
                 
+                // Enforce 3.5 bar for Class V and VI
+                const REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI = 3.5;
+                if (leakClass === 'V' || leakClass === 'VI') {
+                    if (inletPressureGauge !== REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI) {
+                        errorMessageP.textContent = `สำหรับ ANSI/FCI Class ${leakClass}, แรงดันขาเข้าต้องเป็น ${REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI} bar. ค่าที่คำนวณจะใช้ ${REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI} bar.`;
+                        inletPressureGauge = REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI; // Override for calculation
+                        resultDiv.classList.remove('hidden'); // Ensure message is visible
+                    }
+                }
+
+                debugInfo += `<p>มาตรฐาน: ANSI/FCI</p>`;
                 debugInfo += `<p>ความดันขาเข้า (Input Gauge): ${inletPressureGauge.toFixed(2)} bar</p>`;
-                debugInfo += `<p>ความดันขาออก (Input Gauge): ${outletPressureGauge.toFixed(2)} bar</p>`;
-                debugInfo += `<p>ความดันขาเข้า (Gauge, psia): ${inletPressureGauge_psia.toFixed(4)} psia</p>`;
-                debugInfo += `<p>ความดันขาออก (Gauge, psia): ${outletPressureGauge_psia.toFixed(4)} psia</p>`;
+                debugInfo += `<p>ความดันขาออก (Gauge): ${outletPressureGauge.toFixed(2)} bar (ฟิก 0)</p>`;
 
-                // Calculate X (Differential pressure ratio) as per user's request and GSheet
-                // X = P_in_gauge_psia / (P_in_gauge_psia + P_ambient_psia)
-                let X;
-                if ((inletPressureGauge_psia + AMBIENT_PRESSURE_PSI) === 0) {
-                    X = 0; // Avoid division by zero
-                } else {
-                    X = inletPressureGauge_psia / (inletPressureGauge_psia + AMBIENT_PRESSURE_PSI);
-                }
-                debugInfo += `<p>X (Calculated): ${X.toFixed(6)}</p>`;
-                debugInfo += `<p>XT: ${XT}</p>`;
-
-                // Determine Xchoked and XSIZING
-                const Xchoked = Fk * XT; // Use Fk = 1.0 as per GSheet
-                let XSIZING = Math.min(X, Xchoked);
-                debugInfo += `<p>Xchoked (Fk x XT): ${Xchoked.toFixed(3)}</p>`;
-                debugInfo += `<p>XSIZING: ${XSIZING.toFixed(6)}</p>`;
-
-                // Calculate expansion factor Y (matching Metrus App formula)
-                const Y = 1 - (XSIZING / (3 * Fk * XT)); // Use Fk = 1.0 as per GSheet
-                debugInfo += `<p>Y (Expansion factor): ${Y.toFixed(6)}</p>`;
-
-                if (Y < 0.66) { 
-                    errorMessageP.textContent = 'เกิดข้อผิดพลาดในการคำนวณ Y ค่าไม่ถูกต้อง (Y < 0.66)';
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-                // Calculate absolute inlet pressure for Q formula, as seen in GSheet: 50.763195 psia
-                // This corresponds to the gauge pressure converted to psia, NOT gauge + ambient.
-                const p1_abs_for_Q_psia = inletPressureGauge * BAR_TO_PSI; // This maps 3.5 bar to 50.7633 psia
-
-                // Calculate Flow rate capacity Q (l/min) using a derived constant
-                // Derived constant to match Q=50058 l/min
-                // Q_lmin = N_constant * Cv_gpm * Y * sqrt(P1_abs_psia / (Mw * T_R * Z1))
-                const N1_METRUS_GPM_LPM = 27474.30; 
-                
-                let Q_lmin = N1_METRUS_GPM_LPM * Cv_gpm * Y * Math.sqrt(p1_abs_for_Q_psia / (gasMolecularWeight * REFERENCE_TEMP_R * COMPRESSIBILITY_FACTOR));
-                debugInfo += `<p>p1_abs_for_Q_psia: ${p1_abs_for_Q_psia.toFixed(4)} psia</p>`;
-                debugInfo += `<p>Q (Flow rate capacity): ${Q_lmin.toFixed(2)} l/min</p>`;
-                
-                // Get leakage factor
-                let leakageFactor;
-                if (leakClass === 'I') {
-                    leakageFactor = parseFloat(classIFactorInput.value);
-                    if (isNaN(leakageFactor) || leakageFactor < 0) {
-                        errorMessageP.textContent = 'โปรดป้อนปัจจัยการรั่วไหลที่ถูกต้องสำหรับ Class I';
+                // ANSI/FCI Leak Class specific calculations
+                if (['V', 'VI'].includes(leakClass)) {
+                    // Class V and VI for ANSI/FCI directly use table lookups (no Cv, no Q_lmin calculation from scratch)
+                    if (isNaN(valveSizeInches) || valveSizeInches <= 0) {
+                        errorMessageP.textContent = `โปรดป้อนขนาดวาล์ว (Seat Diameter) ที่ถูกต้องสำหรับ ANSI/FCI Class ${leakClass}`;
                         resultDiv.classList.remove('hidden');
                         return;
                     }
+
+                    // Round valveSizeInches to 1 decimal for consistent lookup as per table definitions
+                    const valveSizeInchesRoundedForLookup = Math.round(valveSizeInches * 10) / 10; 
+
+                    if (leakClass === 'V') {
+                        if (!ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES.hasOwnProperty(valveSizeInchesRoundedForLookup.toString())) {
+                            errorMessageP.textContent = `ขนาดวาล์ว ${valveSizeInches} นิ้ว (ปัดเศษเป็น ${valveSizeInchesRoundedForLookup} นิ้ว) ไม่ตรงกับขนาดมาตรฐานในตาราง ANSI/FCI Class V. โปรดใช้ขนาดดังนี้ (นิ้ว): ${Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES).join(', ')}`;
+                            resultDiv.classList.remove('hidden');
+                            return;
+                        }
+
+                        const classVLeakage = ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES[valveSizeInchesRoundedForLookup.toString()];
+                        if (classVLeakage === undefined) { // Should not happen with hasOwnProperty check, but good for robustness
+                            errorMessageP.textContent = `ไม่พบค่าการรั่วไหลสำหรับ ANSI/FCI Class V และขนาดวาล์ว ${valveSizeInchesRoundedForLookup} นิ้ว`;
+                            resultDiv.classList.remove('hidden');
+                            return;
+                        }
+                        permissibleLeakageMlPerMin = classVLeakage;
+                        permissibleLeakageM3PerHour = permissibleLeakageMlPerMin / 16666.666667;
+
+                        debugInfo += `<p>การคำนวณ Class V (ANSI/FCI)</p>`;
+                        debugInfo += `<p>ขนาดวาล์ว (นิ้ว): ${valveSizeInches.toFixed(1)} นิ้ว (ใช้ค่าปัดเศษ ${valveSizeInchesRoundedForLookup} นิ้ว)</p>`;
+                        debugInfo += `<p>ค่าจากตาราง Class V (ml/min): ${classVLeakage.toFixed(4)}</p>`;
+
+
+                    } else if (leakClass === 'VI') {
+                        // For Class VI, use the rounded inch value for direct lookup
+                        if (!ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES.hasOwnProperty(valveSizeInchesRoundedForLookup.toString())) {
+                            errorMessageP.textContent = `สำหรับ ANSI/FCI Class VI, ขนาดวาล์ว ${valveSizeInches} นิ้ว (ปัดเศษเป็น ${valveSizeInchesRoundedForLookup} นิ้ว) ไม่ตรงกับขนาดมาตรฐานที่ระบุ. โปรดใช้ขนาดดังนี้ (นิ้ว): ${Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES).join(', ')}`;
+                            resultDiv.classList.remove('hidden');
+                            return;
+                        }
+                        
+                        const classVILeakage = ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES[valveSizeInchesRoundedForLookup.toString()];
+                        if (classVILeakage === undefined) { // Should not happen with hasOwnProperty check
+                            errorMessageP.textContent = `ไม่พบค่าการรั่วไหลสำหรับ ANSI/FCI Class VI และขนาดวาล์ว ${valveSizeInchesRoundedForLookup} นิ้ว`;
+                            resultDiv.classList.remove('hidden');
+                            return;
+                        }
+                        permissibleLeakageMlPerMin = classVILeakage; // Directly use the value from table (ml/min at 3.5 bar)
+                        permissibleLeakageM3PerHour = permissibleLeakageMlPerMin / 16666.666667;
+
+                        debugInfo += `<p>การคำนวณ Class VI (ANSI/FCI)</p>`;
+                        debugInfo += `<p>ขนาดวาล์ว (นิ้ว): ${valveSizeInches.toFixed(1)} นิ้ว (ใช้ค่าปัดเศษ ${valveSizeInchesRoundedForLookup} นิ้ว)</p>`;
+                        debugInfo += `<p>ค่าจากตาราง Class VI (ml/min): ${classVILeakage.toFixed(4)}</p>`;
+                    }
+                } else if (['II', 'III', 'IV', 'IV-S1', 'I'].includes(leakClass)) {
+                    // Validate Cv for ANSI/FCI
+                    if (isNaN(Cv_gpm) || Cv_gpm <= 0) {
+                        errorMessageP.textContent = 'โปรดป้อนค่า Cv ที่ถูกต้องและเป็นค่าบวกสำหรับ ANSI/FCI (ยกเว้น Class V, VI)';
+                        resultDiv.classList.remove('hidden');
+                        return;
+                    }
+                    debugInfo += `<p>Cv: ${Cv_gpm}</p>`;
+
+                    const XT = FIXED_XT_ANSI_FCI; // XT is fixed for ANSI/FCI
+
+                    // Constants from Excel Sheet for ANSI/FCI (these are always used for Q_lmin if applicable)
+                    const BAR_TO_PSI = 14.50377; 
+                    const AMBIENT_PRESSURE_PSI = 14.7; 
+                    const SPECIFIC_HEAT_K = 1.40; 
+                    const SPECIFIC_HEAT_FACTOR_FK = 1.00; 
+                    const COMPRESSIBILITY_FACTOR_Z1 = 1.00; 
+                    const REFERENCE_TEMP_R = 518.67; 
+
+                    let gasMolecularWeight; 
+                    if (gasMedium === 'air') {
+                        gasMolecularWeight = 28.97; 
+                    } else if (gasMedium === 'nitrogen') {
+                        gasMolecularWeight = 28.01; 
+                    } else {
+                        errorMessageP.textContent = 'ชนิดของก๊าซไม่ถูกต้องสำหรับ ANSI/FCI';
+                        resultDiv.classList.remove('hidden');
+                        return;
+                    }
+
+                    // Pressures calculation based on Excel (D24, D25, D26)
+                    const inletPressure_psia_D24 = inletPressureGauge * BAR_TO_PSI; 
+                    const outletPressure_psia_D25 = outletPressureGauge * BAR_TO_PSI; 
+                    const pressureDrop_psia_D26 = inletPressure_psia_D24 - outletPressure_psia_D25; 
+                    
+                    debugInfo += `<p>D24 (Inlet Pressure, psia): ${inletPressure_psia_D24.toFixed(4)} psia</p>`;
+                    debugInfo += `<p>D25 (Outlet Pressure, psia): ${outletPressure_psia_D25.toFixed(4)} psia</p>`;
+                    debugInfo += `<p>D26 (Pressure Drop, psia): ${pressureDrop_psia_D26.toFixed(4)} psia</p>`;
+
+                    // Calculate X (Differential pressure ratio) based on Excel (D14)
+                    let X_D14;
+                    if ((inletPressure_psia_D24 + AMBIENT_PRESSURE_PSI) === 0) {
+                        X_D14 = 0; 
+                    } else {
+                        X_D14 = pressureDrop_psia_D26 / (inletPressure_psia_D24 + AMBIENT_PRESSURE_PSI);
+                    }
+                    debugInfo += `<p>X (D14 Calculated): ${X_D14.toFixed(6)}</p>`;
+                    debugInfo += `<p>XT (Fixed): ${XT}</p>`; 
+
+                    // Determine Xsizing (D19 in Excel)
+                    let XSIZING_D19 = Math.min(X_D14, XT);
+                    debugInfo += `<p>XSIZING (D19): ${XSIZING_D19.toFixed(6)}</p>`;
+                    
+                    // Calculate Expansion factor Y (D20 in Excel)
+                    let Y_D20 = 1 - (XSIZING_D19 / (3 * XT));
+                    debugInfo += `<p>Y (D20 Expansion factor): ${Y_D20.toFixed(6)}</p>`;
+
+                    if (Y_D20 < 0.66) { 
+                        errorMessageP.textContent = 'เกิดข้อผิดพลาดในการคำนวณ Y ค่าไม่ถูกต้อง (Y < 0.66)';
+                        resultDiv.classList.remove('hidden');
+                        return;
+                    }
+
+                    const T320_CONSTANT = 469.380; 
+                    
+                    // Calculate Flow rate capacity Q (l/min) using the Excel formula string
+                    let Q_lmin = (T320_CONSTANT * Cv_gpm * inletPressure_psia_D24 * AMBIENT_PRESSURE_PSI) * Y_D20 * Math.sqrt(SPECIFIC_HEAT_K / (gasMolecularWeight * REFERENCE_TEMP_R * COMPRESSIBILITY_FACTOR_Z1)) * 0.4719;
+                    
+                    debugInfo += `<p>Q (Flow rate capacity): ${Q_lmin.toFixed(4)} l/min</p>`; // Show Q for these classes
+                    
+                    let leakageFactor_D27;
+                    if (leakClass === 'I') {
+                        leakageFactor_D27 = parseFloat(classIFactorInput.value);
+                        if (isNaN(leakageFactor_D27) || leakageFactor_D27 < 0) {
+                            errorMessageP.textContent = 'โปรดป้อนปัจจัยการรั่วไหลที่ถูกต้องสำหรับ Class I';
+                            resultDiv.classList.remove('hidden');
+                            return;
+                        }
+                    } else {
+                        leakageFactor_D27 = ANSI_FCI_LEAK_CLASS_FACTORS[leakClass];
+                    }
+
+                    debugInfo += `<p>Leak class factor (D27): ${leakageFactor_D27}</p>`;
+
+                    if (leakageFactor_D27 === null || leakageFactor_D27 === undefined) {
+                        errorMessageP.textContent = 'คลาสการรั่วไหลไม่ถูกต้องหรือไม่มีปัจจัยกำหนดไว้สำหรับ ANSI/FCI';
+                        resultDiv.classList.remove('hidden');
+                        return;
+                    }
+
+                    // Calculate Max. Leakage (l/min)
+                    const permissibleLeakageLMin = Q_lmin * leakageFactor_D27;
+                    permissibleLeakageMlPerMin = permissibleLeakageLMin * 1000; 
+                    permissibleLeakageM3PerHour = permissibleLeakageLMin * 0.06; 
+                    debugInfo += `<p>การคำนวณ Class ${leakClass} (ANSI/FCI)</p>`;
                 } else {
-                    leakageFactor = LEAK_CLASS_FACTORS[leakClass];
-                }
-
-                debugInfo += `<p>Leak class factor: ${leakageFactor}</p>`;
-
-                if (leakageFactor === null || leakageFactor === undefined) {
-                    errorMessageP.textContent = 'คลาสการรั่วไหลไม่ถูกต้องหรือไม่มีปัจจัยกำหนดไว้';
+                    errorMessageP.textContent = 'คลาสการรั่วไหลไม่ถูกต้องสำหรับ ANSI/FCI'; // Should not happen with current dropdowns
                     resultDiv.classList.remove('hidden');
                     return;
                 }
 
-                // Calculate permissible leakage
-                const permissibleLeakageLMin = Q_lmin * leakageFactor;
-                permissibleLeakageMlPerMin = permissibleLeakageLMin * 1000; // Convert l/min to ml/min
-                permissibleLeakageM3PerHour = permissibleLeakageLMin * 0.06; // Convert l/min to m³/h
-
-            } else if (leakClass === 'V') {
-                // Class V Calculation (Air/Gas)
-                // Mandatory test pressure of 3.5 bar when testing with air (from document page 9)
-                if (gasMedium === 'air' && inletPressureGauge !== 3.5) {
-                    errorMessageP.textContent = 'สำหรับ Class V (อากาศ) ความดันขาเข้าควรเป็น 3.5 bar';
-                }
-                
-                if (isNaN(valveSize) || valveSize <= 0) {
-                    errorMessageP.textContent = 'โปรดป้อนขนาดวาล์ว (Seat Diameter) ที่ถูกต้องสำหรับ Class V';
+            } else if (selectedStandard === 'ISO_5208') {
+                // ISO 5208 Third edition calculation
+                if (isNaN(valveSizeInches) || valveSizeInches <= 0) {
+                    errorMessageP.textContent = 'โปรดป้อนขนาดวาล์ว (Seat Diameter) ที่ถูกต้องสำหรับ ISO 5208';
                     resultDiv.classList.remove('hidden');
                     return;
                 }
 
-                permissibleLeakageM3PerHour = 10.8 * Math.pow(10, -6) * valveSize;
-                permissibleLeakageMlPerMin = permissibleLeakageM3PerHour * 16666.666667;
+                const valveSizeInchesRounded = Math.round(valveSizeInches * 10) / 10; // Round to 1 decimal place for 1.5, 2.5 etc.
 
-            } else if (leakClass === 'VI') {
-                // Class VI Calculation (Air/Gas)
-                
-                if (isNaN(valveSize) || valveSize <= 0) {
-                    errorMessageP.textContent = 'โปรดป้อนขนาดวาล์ว (Seat Diameter) ที่ถูกต้องสำหรับ Class VI';
+                if (!STANDARD_VALVE_INCH_SIZES.includes(valveSizeInchesRounded)) {
+                    errorMessageP.textContent = `ขนาดวาล์ว ${valveSizeInches} นิ้ว (ปัดเศษเป็น ${valveSizeInchesRounded} นิ้ว) ไม่ตรงกับขนาดมาตรฐานในตาราง ISO. โปรดใช้ขนาดดังนี้ (นิ้ว): ${STANDARD_VALVE_INCH_SIZES.join(', ')}`;
                     resultDiv.classList.remove('hidden');
                     return;
                 }
 
-                const LF_ml_min = LF_ML_PER_MIN_CLASS_VI[valveSize];
-                if (LF_ml_min === undefined) {
-                    errorMessageP.textContent = `สำหรับ Class VI, ไม่พบค่า LFml/min สำหรับขนาดวาล์ว ${valveSize} มม.`;
+                const isoLeakage = ISO_5208_LEAKAGE_ML_PER_MIN_INCHES[leakClass][valveSizeInchesRounded.toString()];
+                if (isoLeakage === undefined) {
+                    errorMessageP.textContent = `ไม่พบค่าการรั่วไหลสำหรับ ISO 5208 Rate ${leakClass} และขนาดวาล์ว ${valveSizeInchesRounded} นิ้ว`;
                     resultDiv.classList.remove('hidden');
                     return;
                 }
-
-                const deltaP = inletPressureGauge - outletPressureGauge;
-                permissibleLeakageMlPerMin = 0.3 * deltaP * LF_ml_min;
+                permissibleLeakageMlPerMin = isoLeakage;
                 permissibleLeakageM3PerHour = permissibleLeakageMlPerMin / 16666.666667;
+
+                debugInfo += `<p>มาตรฐาน: ISO 5208</p>`;
+                debugInfo += `<p>ขนาดวาล์ว (นิ้ว): ${valveSizeInches.toFixed(1)} นิ้ว</p>`;
+                debugInfo += `<p>คลาสการรั่วไหล: ${leakClass}</p>`;
+                debugInfo += `<p>ความดันขาเข้า (Gauge): ${inletPressureGauge.toFixed(2)} bar (ฟิก 5.0)</p>`;
+                debugInfo += `<p>ความดันขาออก (Gauge): ${outletPressureGauge.toFixed(2)} bar (ฟิก 0)</p>`;
+
+
+            } else if (selectedStandard === 'API_598') {
+                // API 598 Eighth edition calculation
+                if (isNaN(valveSizeInches) || valveSizeInches <= 0) {
+                    errorMessageP.textContent = 'โปรดป้อนขนาดวาล์ว (Seat Diameter) ที่ถูกต้องสำหรับ API 598';
+                    resultDiv.classList.remove('hidden');
+                    return;
+                }
+
+                const valveSizeInchesRounded = Math.round(valveSizeInches * 10) / 10; // Round to 1 decimal place
+
+                if (!STANDARD_VALVE_INCH_SIZES.includes(valveSizeInchesRounded)) {
+                    errorMessageP.textContent = `ขนาดวาล์ว ${valveSizeInches} นิ้ว (ปัดเศษเป็น ${valveSizeInchesRounded} นิ้ว) ไม่ตรงกับขนาดมาตรฐานในตาราง API 598. โปรดใช้ขนาดดังนี้ (นิ้ว): ${STANDARD_VALVE_INCH_SIZES.join(', ')}`;
+                    resultDiv.classList.remove('hidden');
+                    return;
+                }
+
+                // Check Test Pressure range for API 598 Low Pressure Test
+                const BAR_TO_PSI = 14.50377; // Define here for API specific calculation as it's not universally needed
+                const inletPressurePsig = inletPressureGauge * BAR_TO_PSI; // Convert input bar to psig
+                
+                if (inletPressurePsig < 60 || inletPressurePsig > 100) {
+                    errorMessageP.textContent = `สำหรับ API 598 Low Pressure Test, ความดันขาเข้า (Gauge) ต้องอยู่ระหว่าง 60-100 psig (ปัจจุบัน: ${inletPressurePsig.toFixed(2)} psig)`;
+                    resultDiv.classList.remove('hidden');
+                    return;
+                }
+
+                const apiLeakage = API_598_LEAKAGE_ML_PER_MIN_INCHES[valveSizeInchesRounded.toString()];
+                if (apiLeakage === undefined) {
+                    errorMessageP.textContent = `ไม่พบค่าการรั่วไหลสำหรับ API 598 และขนาดวาล์ว ${valveSizeInchesRounded} นิ้ว`;
+                    resultDiv.classList.remove('hidden');
+                    return;
+                }
+                permissibleLeakageMlPerMin = apiLeakage;
+                permissibleLeakageM3PerHour = permissibleLeakageMlPerMin / 16666.666667;
+
+                debugInfo += `<p>มาตรฐาน: API 598</p>`;
+                debugInfo += `<p>ขนาดวาล์ว (นิ้ว): ${valveSizeInches.toFixed(1)} นิ้ว</p>`;
+                debugInfo += `<p>คลาสการรั่วไหล: ${leakClass}</p>`;
+                debugInfo += `<p>ความดันขาเข้า (Gauge): ${inletPressureGauge.toFixed(2)} bar (ฟิก 5.0)</p>`;
+                debugInfo += `<p>ความดันขาออก (Gauge): ${outletPressureGauge.toFixed(2)} bar (ฟิก 0)</p>`;
+                debugInfo += `<p>ความดันขาเข้า (psig): ${inletPressurePsig.toFixed(2)} psig (ต้อง 60-100 psig)</p>`;
             }
 
             // Display results
