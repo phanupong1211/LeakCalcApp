@@ -3,656 +3,441 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องคำนวณการรั่วไหลของวาล์ว (อากาศ/ไนโตรเจน) - อัปเดตแรงดัน</title>
+    <title>AI ถามตอบรายงานการซ่อมวาล์ว</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for Inter font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Light gray background */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        /* Custom styles for rounded corners and shadows */
-        .card {
-            border-radius: 1.5rem; /* More rounded corners */
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15); /* Deeper, softer shadow */
-            background-color: #ffffff; /* White card background */
-            padding: 2.5rem; /* More padding inside card */
+        
+        .container {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .input-field {
-            border-radius: 0.75rem; /* More rounded input fields */
-            padding: 0.85rem 1rem; /* Slightly more padding for better appearance */
-            border: 1px solid #cbd5e1; /* Light gray border */
-            width: 100%;
-            font-size: 1rem; /* Consistent font size for inputs */
+        
+        textarea::-webkit-scrollbar {
+            width: 8px;
         }
-        .btn-primary {
-            background-color: #4f46e5; /* Indigo */
-            color: white;
-            border-radius: 0.75rem;
-            padding: 1.1rem 2.5rem; /* Larger button padding */
-            transition: background-color 0.3s ease, transform 0.2s ease; /* Add transform for hover effect */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            font-weight: 600; /* Bolder text */
+        textarea::-webkit-scrollbar-track {
+            background: #e0e0e0;
+            border-radius: 10px;
         }
-        .btn-primary:hover {
-            background-color: #4338ca; /* Darker indigo on hover */
-            transform: translateY(-2px); /* Slight lift on hover */
+        textarea::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
         }
-        .label {
-            font-weight: 600;
-            color: #334155; /* Slate 700 */
-            margin-bottom: 0.5rem; /* Space below label */
-            display: block; /* Ensure label takes full width */
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #555;
+            border-radius: 10px;
         }
-        .result-box {
-            background-color: #e0f7fa; /* Lighter blue background for results */
-            border: 2px solid #00acc1; /* Stronger blue border */
-            border-radius: 1rem;
-            padding: 2rem; /* More padding */
-            margin-top: 2rem; /* More space above */
-            text-align: center; /* Center result text */
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        .result-value {
-            font-size: 1.75rem; /* Larger font for result values */
-            font-weight: 700; /* Bolder font for result values */
-            color: #00796b; /* Dark teal color for the actual value */
-            display: block; /* Ensure value is on new line if needed */
-            margin-top: 0.5rem;
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .warning-message {
-            color: #ef4444; /* Red 500 */
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
         }
-        .debug-box {
-            background-color: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-size: 0.875rem;
-            max-height: 200px; /* Limit debug box height */
-            overflow-y: auto; /* Make it scrollable */
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .grid {
-            gap: 1.5rem; /* Increase gap between grid items */
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <div class="card w-full max-w-2xl">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">เครื่องคำนวณการรั่วไหลของวาล์ว (อากาศ/ไนโตรเจน)</h1>
-        <p class="text-center text-gray-600 mb-8">คำนวณค่าการรั่วไหลของวาล์วตามมาตรฐานต่างๆ <br>By Phanupong</p>
+    <div class="container p-8 rounded-xl shadow-2xl w-full max-w-4xl">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-2">🔧 AI ถามตอบรายงานการซ่อมวาล์ว</h1>
+        <p class="text-center text-gray-600 mb-6">ระบบ AI สำหรับตอบคำถามเกี่ยวกับรายงานการซ่อมบำรุงวาล์ว</p>
 
-        <div class="grid grid-cols-1 md:grid-cols-2">
-            <div>
-                <label for="standardSelect" class="label">มาตรฐาน:</label>
-                <select id="standardSelect" class="input-field">
-                    <option value="ANSI/FCI">ANSI/FCI 70-2-2006</option>
-                    <option value="ISO_5208">ISO 5208 Third edition</option>
-                    <option value="API_598">API 598 Eighth edition</option>
-                </select>
-            </div>
-
-            <div id="cvContainer">
-                <label for="cv" class="label">Cv (Kvs) value (gpm):</label>
-                <input type="number" id="cv" class="input-field" placeholder="ตัวอย่าง: 47" value="47">
-            </div>
-
-            <div>
-                <label for="gasMedium" class="label">ชนิดของก๊าซ:</label>
-                <select id="gasMedium" class="input-field">
-                    <option value="air">อากาศ</option>
-                    <option value="nitrogen" selected>ไนโตรเจน</option> </select>
-            </div>
-
-            <div>
-                <label for="inletPressure" class="label">ความดันขาเข้า (Gauge, bar):</label>
-                <input type="number" id="inletPressure" class="input-field" placeholder="ตัวอย่าง: 3.5" value="3.5">
-            </div>
-
-            <div id="outletPressureContainer" class="hidden">
-                <label for="outletPressure" class="label">ความดันขาออก (Gauge, bar):</label>
-                <input type="hidden" id="outletPressure" value="0">
-            </div>
-
-            <div id="valveSizeContainer" class="hidden">
-                <label for="valveSize" class="label">ขนาดวาล์ว (Seat Diameter, inches):</label>
-                <input type="number" id="valveSize" class="input-field" placeholder="ตัวอย่าง: 4 (สำหรับ 4 นิ้ว)">
-                <p id="valveSizeWarning" class="warning-message mt-1 hidden"></p>
-            </div>
-
-            <div>
-                <label for="leakClass" class="label">คลาสการรั่วไหล:</label>
-                <select id="leakClass" class="input-field">
-                    </select>
-            </div>
-            <div id="classIFactorInput" class="hidden md:col-span-2">
-                <label for="classIFactor" class="label">ปัจจัยการรั่วไหลสำหรับ Class I:</label>
-                <input type="number" id="classIFactor" class="input-field" placeholder="ป้อนค่าปัจจัยสำหรับ Class I">
-            </div>
+        <div id="statusMessage" class="text-center text-sm mb-4 p-3 rounded-lg">
+            <span class="loading"></span> กำลังโหลดข้อมูลรายงาน...
         </div>
 
-        <div class="flex justify-center mt-8">
-            <button onclick="calculateLeakage()" class="btn-primary">
-                คำนวณผลลัพธ์
+        <div class="mb-6">
+            <label for="questionInput" class="block text-gray-700 text-sm font-medium mb-2">
+                💬 พิมพ์คำถามของคุณ:
+            </label>
+            <textarea id="questionInput" rows="4"
+                      class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition duration-200 resize-y"
+                      placeholder="ตัวอย่าง: วาล์ว Tag No. 463HV404A มีอาการเสียที่ Stem อย่างไร และมีการแก้ไขอย่างไร?"></textarea>
+        </div>
+
+        <div class="flex justify-center space-x-4 mb-6">
+            <button id="askButton"
+                    class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                🤖 ถาม AI
+            </button>
+            <button id="clearButton"
+                    class="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-300">
+                🗑️ ล้าง
+            </button>
+            <button id="refreshButton"
+                    class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300">
+                🔄 รีเฟรช
             </button>
         </div>
 
-        <div id="result" class="result-box hidden">
-            <h2 class="text-2xl font-bold text-blue-900 mb-3">ผลการคำนวณ:</h2>
-            <p class="text-lg text-blue-800">ค่าการรั่วไหลที่อนุญาต (m³/h): <span id="permissibleLeakageCubicMeter" class="result-value"></span></p>
-            <p class="text-lg text-blue-800 mt-1">ค่าการรั่วไหลที่อนุญาต (ml/min): <span id="permissibleLeakageMlPerMin" class="result-value"></span></p>
-            <p id="errorMessage" class="text-red-600 mt-4 font-medium"></p>
-            
-            <div id="debugInfo" class="debug-box mt-6">
-                <h3 class="font-semibold mb-2 text-gray-700">ข้อมูลการคำนวณ (Debug):</h3>
-                <div id="debugDetails" class="text-gray-600"></div>
+        <div>
+            <label for="aiResponse" class="block text-gray-700 text-sm font-medium mb-2">
+                🎯 คำตอบจาก AI:
+            </label>
+            <textarea id="aiResponse" rows="10" readonly
+                      class="w-full p-4 border-2 border-gray-300 rounded-lg bg-gray-50 focus:outline-none resize-y text-gray-800 font-mono text-sm"></textarea>
+        </div>
+
+        <div class="mt-4 text-center">
+            <p class="text-xs text-gray-500">
+                💡 เคล็ดลับ: ลองถามเกี่ยวกับ Tag Number เฉพาะ หรือปัญหาทั่วไปของวาล์ว
+            </p>
+            <div id="debugInfo" class="mt-2 text-xs text-gray-400 hidden">
+                <p>Debug Info: <span id="recordCount">-</span> รายการ | Status: <span id="debugStatus">-</span></p>
             </div>
         </div>
     </div>
 
     <script>
-        // Fixed XT for ANSI/FCI standard
-        const FIXED_XT_ANSI_FCI = 0.75; 
+        let allReports = []; 
+        let isLoading = false;
+        const questionInput = document.getElementById('questionInput');
+        const askButton = document.getElementById('askButton');
+        const clearButton = document.getElementById('clearButton');
+        const refreshButton = document.getElementById('refreshButton');
+        const aiResponse = document.getElementById('aiResponse');
+        const statusMessage = document.getElementById('statusMessage');
+        const debugInfo = document.getElementById('debugInfo');
+        const recordCount = document.getElementById('recordCount');
+        const debugStatus = document.getElementById('debugStatus');
 
-        // Mapping for Leakage Factors based on leak class (ANSI/FCI)
-        const ANSI_FCI_LEAK_CLASS_FACTORS = {
-            "II": 0.005,
-            "III": 0.001,
-            "IV": 0.0001,
-            "IV-S1": 0.000005,
-            "I": null, // Special case, factor "as agreed"
-        };
+        // *** แทนที่ด้วย URL ของ Power Automate Flow ของคุณ ***
+        const GET_REPORTS_FLOW_URL = "https://prod-10.southeastasia.logic.azure.com:443/workflows/ec21ef67ceb14f9aa21a2a2bbb4aff21/triggers/manual/paths/invoke?api-version=2016-06-01";
+        const ASK_AI_FLOW_URL = "https://prod-15.southeastasia.logic.azure.com:443/workflows/b02aa26f583a44c1a6391d56ef79250d/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=haotm4CiiBXIYcMakpvAY-oHg9hPO2MSRGi2hk4IY3M";
 
-        // New constant for Class VI leakage (ml/min) based on user's fixed values (from last prompt)
-        const ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES = {
-            "1": 0.15,
-            "1.5": 0.30,
-            "2": 0.45,
-            "2.5": 0.60,
-            "3": 0.90,
-            "4": 1.70,
-            "6": 4.00,
-            "8": 6.75,
-            "10": 11.1,
-            "12": 16.0,
-            "14": 21.6, 
-            "16": 28.4  
-        };
+        // เปิด Debug mode (สามารถปิดได้โดยเปลี่ยนเป็น false)
+        const DEBUG_MODE = true;
 
-        // New constant for Class V leakage (ml/min) based on user's fixed values (image_b5bc01.png)
-        const ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES = {
-            "1": 4.7,
-            "1.5": 7.05,
-            "2": 9.4,
-            "2.5": 11.75,
-            "3": 14.1,
-            "4": 18.8,
-            "6": 28.2,
-            "8": 37.6,
-            "10": 47,
-            "12": 56.4,
-            "14": 65.8,
-            "16": 75.2,
-        };
-
-
-        // ISO 5208 Third edition - Maximum Acceptable Leakage (ml/min) based on INCHES
-        // Updated with values from image_b5d75b.png
-        const ISO_5208_LEAKAGE_ML_PER_MIN_INCHES = {
-            "rate a": {
-                "1": 0, "1.5": 0, "2": 0, "2.5": 0, "3": 0, "4": 0, "6": 0, "8": 0, "10": 0, "12": 0, "14": 0, "16": 0
-            },
-            "rate b": {
-                "1": 0.45, "1.5": 0.72, "2": 0.9, "2.5": 1.17, "3": 1.44, "4": 1.8, "6": 2.7, "8": 3.6, "10": 4.5, "12": 5.4, "14": 6.3, "16": 7.2
-            },
-            "rate c": {
-                "1": 4.5, "1.5": 7.2, "2": 9, "2.5": 11.7, "3": 14.4, "4": 18, "6": 27, "8": 36, "10": 45, "12": 54, "14": 63, "16": 72
-            },
-            "rate d": {
-                "1": 45, "1.5": 72, "2": 90, "2.5": 117, "3": 144, "4": 180, "6": 270, "8": 360, "10": 450, "12": 540, "14": 630, "16": 720
+        function setStatus(message, type = 'info', loading = false) {
+            const colors = {
+                'info': 'bg-blue-100 text-blue-800 border-blue-200',
+                'success': 'bg-green-100 text-green-800 border-green-200',
+                'error': 'bg-red-100 text-red-800 border-red-200',
+                'warning': 'bg-yellow-100 text-yellow-800 border-yellow-200'
+            };
+            
+            isLoading = loading;
+            statusMessage.className = `text-center text-sm mb-4 p-3 rounded-lg border ${colors[type]}`;
+            
+            if (loading) {
+                statusMessage.innerHTML = `<span class="loading"></span> ${message}`;
+                askButton.disabled = true;
+                questionInput.disabled = true;
+                clearButton.disabled = true;
+                refreshButton.disabled = true;
+                askButton.innerHTML = '⏳ กำลังประมวลผล...';
+                askButton.classList.add('pulse');
+            } else {
+                statusMessage.innerHTML = message;
+                askButton.disabled = false;
+                questionInput.disabled = false;
+                clearButton.disabled = false;
+                refreshButton.disabled = false;
+                askButton.innerHTML = '🤖 ถาม AI';
+                askButton.classList.remove('pulse');
             }
-        };
 
-        // API 598 Eighth edition - Low Pressure Test - Maximum Acceptable Leakage (ml/min) based on INCHES
-        const API_598_LEAKAGE_ML_PER_MIN_INCHES = {
-            "1": 0, "1.5": 0, "2": 0, "2.5": 3.6, "3": 3.6, "4": 3.6, "6": 3.6, "8": 6, "10": 6, "12": 6, "14": 8.4, "16": 9.6
-        };
-
-        // Standard valve sizes in inches from the tables (ISO/API, and now ANSI/FCI V/VI), for lookup validation
-        const STANDARD_VALVE_INCH_SIZES = [1, 1.5, 2, 2.5, 3, 4, 6, 8, 10, 12, 14, 16]; // General sizes for ISO/API
-        const ANSI_FCI_V_VI_VALVE_INCH_SIZES = Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES).map(Number).sort((a,b)=>a-b); // Dynamic from Class V table
-        // Combine all possible sizes for input validation for ANSI/FCI V/VI.
-        const ALL_ANSI_FCI_V_VI_INCH_SIZES = [...new Set([...Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES).map(Number), ...Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES).map(Number)])].sort((a,b)=>a-b);
-
-
-        // Get references to elements
-        const standardSelect = document.getElementById('standardSelect');
-        const leakClassSelect = document.getElementById('leakClass');
-        const classIFactorInputDiv = document.getElementById('classIFactorInput');
-        const classIFactorInput = document.getElementById('classIFactor');
-        const valveSizeContainer = document.getElementById('valveSizeContainer');
-        const valveSizeInput = document.getElementById('valveSize');
-        const valveSizeWarning = document.getElementById('valveSizeWarning');
-        const inletPressureInput = document.getElementById('inletPressure');
-        const cvContainer = document.getElementById('cvContainer'); // Get Cv container
-        const cvInput = document.getElementById('cv'); // Get Cv input field
-        const resultDiv = document.getElementById('result');
-        const permissibleLeakageCubicMeterP = document.getElementById('permissibleLeakageCubicMeter');
-        const permissibleLeakageMlPerMinP = document.getElementById('permissibleLeakageMlPerMin');
-        const errorMessageP = document.getElementById('errorMessage');
-        const debugDetailsDiv = document.getElementById('debugDetails');
-
-        // Helper function to add options to a select element
-        function addOption(selectElement, text, value) {
-            const option = document.createElement('option');
-            option.textContent = text;
-            option.value = value;
-            selectElement.appendChild(option);
-        }
-
-        // Function to update leak class options and field visibility based on standard
-        function updateLeakClassOptions() {
-            const selectedStandard = standardSelect.value;
-            leakClassSelect.innerHTML = ''; // Clear existing options
-            valveSizeContainer.classList.add('hidden'); // Hide valve size by default
-            valveSizeWarning.classList.add('hidden'); // Hide warning by default
-            classIFactorInputDiv.classList.add('hidden'); // Hide Class I factor by default
-
-            // Reset error messages and enable/disable pressure and Cv fields
-            errorMessageP.textContent = '';
-            resultDiv.classList.add('hidden'); // Hide results when standard changes
-            inletPressureInput.disabled = false; // Enable by default
-            cvContainer.classList.remove('hidden'); // Show Cv by default
-
-            if (selectedStandard === 'ANSI/FCI') {
-                inletPressureInput.value = "3.5"; // Default for ANSI/FCI
-                cvInput.value = "47"; // Default Cv for ANSI/FCI
-
-                addOption(leakClassSelect, 'Class IV (Factor=0.0001)', 'IV');
-                addOption(leakClassSelect, 'Class II (Factor=0.005)', 'II');
-                addOption(leakClassSelect, 'Class III (Factor=0.001)', 'III');
-                addOption(leakClassSelect, 'Class IV-S1 (Factor=0.000005)', 'IV-S1');
-                addOption(leakClassSelect, 'Class I (Factor=as agreed, requires manual input)', 'I');
-                addOption(leakClassSelect, 'Class V (Air/Gas)', 'V');
-                addOption(leakClassSelect, 'Class VI (Air/Gas)', 'VI');
-                
-                leakClassSelect.value = 'IV'; // Set a default leak class for ANSI/FCI
-                leakClassSelect.dispatchEvent(new Event('change')); // Trigger change event to handle Class I factor or valve size visibility
-            } else if (selectedStandard === 'ISO_5208') {
-                inletPressureInput.value = "5"; // Fixed for ISO as requested
-                inletPressureInput.disabled = true;
-                cvContainer.classList.add('hidden'); // Hide Cv for ISO
-                cvInput.value = ''; // Clear Cv value when hidden
-
-                valveSizeContainer.classList.remove('hidden'); // Show valve size for ISO/API
-                valveSizeWarning.classList.remove('hidden');
-                valveSizeWarning.textContent = `โปรดป้อนขนาดวาล์ว (นิ้ว) ที่ตรงกับค่ามาตรฐาน (${STANDARD_VALVE_INCH_SIZES.join(', ')})`;
-                
-                addOption(leakClassSelect, 'Rate A', 'rate a');
-                addOption(leakClassSelect, 'Rate B', 'rate b');
-                addOption(leakClassSelect, 'Rate C', 'rate c');
-                addOption(leakClassSelect, 'Rate D', 'rate d');
-                leakClassSelect.value = 'rate a'; // Set a default leak class for ISO
-            } else if (selectedStandard === 'API_598') {
-                inletPressureInput.value = "5"; // Fixed for API as requested
-                inletPressureInput.disabled = true;
-                cvContainer.classList.add('hidden'); // Hide Cv for API
-                cvInput.value = ''; // Clear Cv value when hidden
-
-                valveSizeContainer.classList.remove('hidden'); // Show valve size for ISO/API
-                valveSizeWarning.classList.remove('hidden');
-                valveSizeWarning.textContent = `โปรดป้อนขนาดวาล์ว (นิ้ว) ที่ตรงกับค่ามาตรฐาน (${STANDARD_VALVE_INCH_SIZES.join(', ')})`;
-                
-                addOption(leakClassSelect, 'Low Pressure Test', 'Low Pressure Test');
-                leakClassSelect.value = 'Low Pressure Test'; // Set a default leak class for API
+            // อัปเดต Debug Info
+            if (DEBUG_MODE) {
+                debugInfo.classList.remove('hidden');
+                recordCount.textContent = Array.isArray(allReports) ? allReports.length : 0;
+                debugStatus.textContent = type;
             }
         }
 
-        // Event listener for standard select change
-        standardSelect.addEventListener('change', updateLeakClassOptions);
+        function logDebug(message, data = null) {
+            if (DEBUG_MODE) {
+                console.log(`[DEBUG] ${message}`, data || '');
+            }
+        }
 
-
-        // Event listener to show/hide Class I factor input and valve size based on leak class (for ANSI/FCI)
-        leakClassSelect.addEventListener('change', (event) => {
-            const selectedClass = event.target.value;
-            const selectedStandard = standardSelect.value;
-
-            // Reset inletPressureInput state to default ANSI/FCI or specific ISO/API
-            if (selectedStandard === 'ANSI/FCI') {
-                inletPressureInput.disabled = false; // Re-enable for other ANSI/FCI classes
-                inletPressureInput.value = "3.5"; // Set default ANSI/FCI pressure
-            } else { // ISO/API
-                inletPressureInput.disabled = true;
-                inletPressureInput.value = "5"; // Set default ISO/API pressure
+        async function fetchReports() {
+            logDebug("Starting fetchReports function");
+            setStatus("กำลังโหลดข้อมูลรายงาน...", 'info', true);
+            
+            if (GET_REPORTS_FLOW_URL === "YOUR_POWER_AUTOMATE_GET_REPORTS_HTTP_POST_URL") {
+                setStatus("❌ กรุณาตั้งค่า URL ของ Power Automate Flow สำหรับดึงข้อมูลรายงาน", 'error');
+                return;
             }
 
-            // Handle Class I factor input visibility (only for ANSI/FCI)
-            if (selectedStandard === 'ANSI/FCI') {
-                if (selectedClass === 'I') {
-                    classIFactorInputDiv.classList.remove('hidden');
-                } else {
-                    classIFactorInputDiv.classList.add('hidden');
-                    classIFactorInput.value = ''; // Clear the value when hidden
+            try {
+                const response = await fetch(GET_REPORTS_FLOW_URL, {
+                    method: 'POST', // Power Automate HTTP trigger is usually POST
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP Error: ${response.status} - ${errorText}`);
                 }
 
-                if (selectedClass === 'V' || selectedClass === 'VI') {
-                    valveSizeContainer.classList.remove('hidden');
-                    valveSizeWarning.classList.remove('hidden'); // Show warning for V/VI
-                    valveSizeWarning.textContent = `โปรดป้อนขนาดวาล์ว (นิ้ว) ที่ตรงกับค่ามาตรฐาน (${ALL_ANSI_FCI_V_VI_INCH_SIZES.join(', ')})`;
-                    inletPressureInput.value = "3.5"; // Enforce pressure in UI
-                    inletPressureInput.disabled = true; // Disable if enforced
+                const data = await response.json();
+                logDebug("Success response from Power Automate (Get Reports)", data);
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    allReports = data;
+                    setStatus(`✅ โหลดข้อมูลรายงานสำเร็จ ${allReports.length} รายการ`, 'success');
+                    logDebug("Sample report structure", allReports[0]);
+                    logDebug("Report headers", Object.keys(allReports[0] || {}));
+                } else if (Array.isArray(data) && data.length === 0) {
+                    setStatus("⚠️ ไม่พบข้อมูลในรายงาน กรุณาตรวจสอบข้อมูลใน Excel Online", 'warning');
+                    allReports = [];
+                    logDebug("Empty data array received");
                 } else {
-                    valveSizeContainer.classList.add('hidden'); // Hide if not V or VI
-                    valveSizeInput.value = ''; // Clear value if hidden
-                    valveSizeWarning.classList.add('hidden'); // Hide warning if not V/VI
-                    // Pressure input already reset above for non V/VI ANSI/FCI
+                    logDebug("Invalid data format received", typeof data);
+                    setStatus("❌ ข้อมูลที่โหลดมาไม่ถูกต้อง (ไม่ใช่ Array)", 'error');
+                    allReports = [];
                 }
-            } else { // For ISO/API
-                classIFactorInputDiv.classList.add('hidden'); // Hide for ISO/API
-                classIFactorInput.value = '';
-                // Valve size and pressure handling for ISO/API already handled by standardSelect change
+            } catch (error) {
+                logDebug("Error in fetchReports", error);
+                setStatus(`❌ ข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`, 'error');
+                allReports = [];
+            }
+        }
+
+        function processQuestionAndGetContext(question, reports) {
+            logDebug("Processing question", { question, reportCount: reports.length });
+            
+            if (!Array.isArray(reports) || reports.length === 0) {
+                logDebug("No reports available for context processing");
+                return "";
+            }
+
+            // ค้นหา Tag Number ในคำถาม
+            let specificTagNo = null;
+            const tagNoPattern = /([A-Z0-9]{6,}|CV\d{7}-\d{3}|PV-\d{4}|\d{3}HV\d{3}[A-Z]?)/i;
+            const tagNoMatch = question.match(tagNoPattern);
+            if (tagNoMatch) {
+                specificTagNo = tagNoMatch[0];
+                logDebug("Detected Tag No", specificTagNo);
+            }
+
+            // สกัดคำสำคัญ
+            const stopWords = ["มี", "อะไร", "บ้าง", "และ", "คือ", "การ", "ของ", "ที่", "ประเภท", "อย่างไร", "ใน", "ทั้งหมด", "รายงาน", "ซ่อม", "จง", "โปรด", "วาล์ว", "tag", "no"];
+            const keywords = question.split(/\s+/)
+                .filter(word => word.length > 2 && !stopWords.includes(word.toLowerCase()))
+                .map(word => word.toLowerCase());
+            
+            if (specificTagNo) {
+                keywords.push(specificTagNo.toLowerCase());
+            }
+            
+            logDebug("Keywords extracted", keywords);
+
+            const relevantReports = [];
+            const maxReports = 5; // จำกัดจำนวนรายงานที่ส่งเป็น Context
+
+            for (const report of reports) {
+                if (relevantReports.length >= maxReports) break;
+
+                let reportText = "";
+                for (const [key, value] of Object.entries(report)) {
+                    if (value && String(value).trim() !== '' && String(value).trim() !== 'N/A') {
+                        reportText += ` ${key}: ${value}`;
+                    }
+                }
+                reportText = reportText.toLowerCase();
+
+                let isRelevant = false;
+                
+                // ถ้ามี Tag Number เฉพาะ ให้ค้นหาตรงๆ
+                if (specificTagNo && reportText.includes(specificTagNo.toLowerCase())) {
+                    isRelevant = true;
+                    logDebug("Found exact match for Tag No", specificTagNo);
+                } else if (!specificTagNo) {
+                    // ถ้าไม่มี Tag Number เฉพาะ ให้ค้นหาจากคำสำคัญ
+                    for (const keyword of keywords) {
+                        if (reportText.includes(keyword)) {
+                            isRelevant = true;
+                            logDebug("Found keyword match", keyword);
+                            break;
+                        }
+                    }
+                }
+
+                if (isRelevant) {
+                    // สร้าง context ที่มีข้อมูลสำคัญ
+                    const context = [
+                        `รายงานเลขที่: ${report['Report No.'] || 'N/A'}`,
+                        `Tag No.: ${report['Tag No.'] || 'N/A'}`,
+                        `รายละเอียด: ${report['Description'] || 'N/A'}`,
+                        `ประเภทวาล์ว: ${report['Valve Type'] || 'N/A'}`,
+                        `ขนาด: ${report['Valve Size'] || 'N/A'}`
+                    ];
+
+                    // เพิ่มข้อมูลอาการและการแก้ไข
+                    const symptoms = [];
+                    const actions = [];
+                    
+                    for (const [key, value] of Object.entries(report)) {
+                        if (key.startsWith('Comment Part ') && value && String(value).trim() !== 'N/A' && String(value).trim() !== '') {
+                            symptoms.push(`${key.replace('Comment Part ', '')}: ${value}`);
+                        }
+                        if (key.startsWith('Part ') && !key.includes('Comment') && value && String(value).trim() !== 'N/A' && String(value).trim() !== '') {
+                            actions.push(`${key.replace('Part ', '')}: ${value}`);
+                        }
+                    }
+
+                    if (symptoms.length > 0) {
+                        context.push(`อาการ: ${symptoms.join(', ')}`);
+                    }
+                    if (actions.length > 0) {
+                        context.push(`การแก้ไข: ${actions.join(', ')}`);
+                    }
+
+                    context.push(`ผลก่อนซ่อม: ${report['Initial Result'] || 'N/A'}`);
+                    context.push(`ผลหลังซ่อม: ${report['Final Result'] || 'N/A'}`);
+                    context.push(`วันที่ตรวจ: ${report['Inspect Date'] || 'N/A'}`);
+
+                    relevantReports.push(context.join(', '));
+                }
+            }
+
+            const contextData = relevantReports.join('\n\n');
+            logDebug("Context data prepared", { length: contextData.length, reports: relevantReports.length });
+            return contextData;
+        }
+
+        async function askAI() {
+            const question = questionInput.value.trim();
+            if (!question) {
+                aiResponse.value = "❌ กรุณาพิมพ์คำถามของคุณ";
+                questionInput.focus();
+                return;
+            }
+
+            if (isLoading) {
+                aiResponse.value = "⏳ กรุณารอให้กระบวนการก่อนหน้านี้เสร็จสิ้น";
+                return;
+            }
+
+            if (!Array.isArray(allReports) || allReports.length === 0) {
+                aiResponse.value = "❌ ยังไม่ได้โหลดข้อมูลรายงาน หรือไม่มีข้อมูล กรุณากดปุ่มรีเฟรชหรือรีเฟรชหน้าเว็บ";
+                return;
+            }
+
+            if (ASK_AI_FLOW_URL === "YOUR_POWER_AUTOMATE_ASK_AI_HTTP_POST_URL") {
+                setStatus("❌ กรุณาตั้งค่า URL ของ Power Automate Flow สำหรับถาม AI", 'error');
+                return;
+            }
+
+            setStatus("กำลังถาม AI...", 'info', true);
+            aiResponse.value = "🤖 กำลังประมวลผลคำถาม...";
+
+            try {
+                const contextData = processQuestionAndGetContext(question, allReports);
+                logDebug("Sending to AI", { question, contextLength: contextData.length });
+                
+                const response = await fetch(ASK_AI_FLOW_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: question, contextData: contextData })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP Error: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                logDebug("AI Response received", result);
+                
+                if (result && result.status === 'success' && result.answer) {
+                    aiResponse.value = result.answer;
+                    aiResponse.classList.add('fade-in');
+                    setStatus("✅ ได้รับคำตอบจาก AI แล้ว", 'success');
+                } else {
+                    const errorMsg = result && result.message ? result.message : 'ไม่ทราบข้อผิดพลาด';
+                    aiResponse.value = `❌ ข้อผิดพลาดจาก AI: ${errorMsg}`;
+                    setStatus("❌ เกิดข้อผิดพลาดในการรับคำตอบ", 'error');
+                }
+            } catch (error) {
+                logDebug("Exception in askAI", error);
+                aiResponse.value = `❌ ข้อผิดพลาดในระบบ: ${error.message}`;
+                setStatus("❌ เกิดข้อผิดพลาดในระบบ", 'error');
+            }
+        }
+
+        function clearAll() {
+            questionInput.value = "";
+            aiResponse.value = "";
+            questionInput.focus();
+            setStatus(`📊 ข้อมูลพร้อมใช้งาน ${allReports.length} รายการ`, 'info');
+        }
+
+        function refreshData() {
+            logDebug("Manual refresh triggered");
+            allReports = [];
+            fetchReports();
+        }
+
+        // Event Listeners
+        askButton.addEventListener('click', askAI);
+        clearButton.addEventListener('click', clearAll);
+        refreshButton.addEventListener('click', refreshData);
+
+        // Enter key support
+        questionInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                if (!isLoading) {
+                    askAI();
+                }
             }
         });
 
-        // Initial call to set up options on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            updateLeakClassOptions();
-            // Trigger change on leakClassSelect for initial state (e.g., if default is V or VI)
-            leakClassSelect.dispatchEvent(new Event('change'));
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            logDebug("DOM Content Loaded");
+            // เรียกข้อมูลทันทีเมื่อ DOM โหลดเสร็จ
+            fetchReports();
         });
 
-
-        function calculateLeakage() {
-            // Reset previous results and errors
-            resultDiv.classList.add('hidden');
-            errorMessageP.textContent = '';
-            permissibleLeakageCubicMeterP.textContent = '';
-            permissibleLeakageMlPerMinP.textContent = '';
-            debugDetailsDiv.innerHTML = ''; // Clear debug info
-
-            // Get input values
-            const selectedStandard = standardSelect.value;
-            let Cv_gpm = parseFloat(document.getElementById('cv').value); // Cv in gpm
-            const gasMedium = document.getElementById('gasMedium').value;
-            let inletPressureGauge = parseFloat(document.getElementById('inletPressure').value); // Use 'let' as it might be overridden
-            const outletPressureGauge = 0; // Hardcoded to 0 as per user request
-            let valveSizeInches = parseFloat(document.getElementById('valveSize').value); // Now input is in inches
-            const leakClass = document.getElementById('leakClass').value;
-
-            // Input validation for common fields
-            if (isNaN(inletPressureGauge)) { 
-                errorMessageP.textContent = 'โปรดป้อนค่าตัวเลขที่ถูกต้องสำหรับความดันขาเข้า';
-                resultDiv.classList.remove('hidden');
-                return;
+        // Error handling for unhandled errors
+        window.addEventListener('error', function(event) {
+            logDebug("Global error caught", event.error);
+            if (!isLoading) {
+                setStatus("❌ เกิดข้อผิดพลาดในระบบ กรุณารีเฟรชหน้าเว็บ", 'error');
             }
-            if (inletPressureGauge < 0) { 
-                errorMessageP.textContent = 'ความดันต้องเป็นค่าบวกหรือศูนย์';
-                resultDiv.classList.remove('hidden');
-                return;
-            }
-            
-            let permissibleLeakageM3PerHour = 0;
-            let permissibleLeakageMlPerMin = 0;
-            let debugInfo = '';
+        });
 
-            // --- Calculation based on selected Standard ---
-            if (selectedStandard === 'ANSI/FCI') {
-                
-                // Enforce 3.5 bar for Class V and VI
-                const REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI = 3.5;
-                if (leakClass === 'V' || leakClass === 'VI') {
-                    if (inletPressureGauge !== REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI) {
-                        errorMessageP.textContent = `สำหรับ ANSI/FCI Class ${leakClass}, แรงดันขาเข้าต้องเป็น ${REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI} bar. ค่าที่คำนวณจะใช้ ${REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI} bar.`;
-                        inletPressureGauge = REQUIRED_PRESSURE_BAR_ANSI_FCI_V_VI; // Override for calculation
-                        resultDiv.classList.remove('hidden'); // Ensure message is visible
-                    }
-                }
-
-                debugInfo += `<p>มาตรฐาน: ANSI/FCI</p>`;
-                debugInfo += `<p>ความดันขาเข้า (Input Gauge): ${inletPressureGauge.toFixed(2)} bar</p>`;
-                debugInfo += `<p>ความดันขาออก (Gauge): ${outletPressureGauge.toFixed(2)} bar (ฟิก 0)</p>`;
-
-                // ANSI/FCI Leak Class specific calculations
-                if (['V', 'VI'].includes(leakClass)) {
-                    // Class V and VI for ANSI/FCI directly use table lookups (no Cv, no Q_lmin calculation from scratch)
-                    if (isNaN(valveSizeInches) || valveSizeInches <= 0) {
-                        errorMessageP.textContent = `โปรดป้อนขนาดวาล์ว (Seat Diameter) ที่ถูกต้องสำหรับ ANSI/FCI Class ${leakClass}`;
-                        resultDiv.classList.remove('hidden');
-                        return;
-                    }
-
-                    // Round valveSizeInches to 1 decimal for consistent lookup as per table definitions
-                    const valveSizeInchesRoundedForLookup = Math.round(valveSizeInches * 10) / 10; 
-
-                    if (leakClass === 'V') {
-                        if (!ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES.hasOwnProperty(valveSizeInchesRoundedForLookup.toString())) {
-                            errorMessageP.textContent = `ขนาดวาล์ว ${valveSizeInches} นิ้ว (ปัดเศษเป็น ${valveSizeInchesRoundedForLookup} นิ้ว) ไม่ตรงกับขนาดมาตรฐานในตาราง ANSI/FCI Class V. โปรดใช้ขนาดดังนี้ (นิ้ว): ${Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES).join(', ')}`;
-                            resultDiv.classList.remove('hidden');
-                            return;
-                        }
-
-                        const classVLeakage = ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_V_INCHES[valveSizeInchesRoundedForLookup.toString()];
-                        if (classVLeakage === undefined) { // Should not happen with hasOwnProperty check, but good for robustness
-                            errorMessageP.textContent = `ไม่พบค่าการรั่วไหลสำหรับ ANSI/FCI Class V และขนาดวาล์ว ${valveSizeInchesRoundedForLookup} นิ้ว`;
-                            resultDiv.classList.remove('hidden');
-                            return;
-                        }
-                        permissibleLeakageMlPerMin = classVLeakage;
-                        permissibleLeakageM3PerHour = permissibleLeakageMlPerMin / 16666.666667;
-
-                        debugInfo += `<p>การคำนวณ Class V (ANSI/FCI)</p>`;
-                        debugInfo += `<p>ขนาดวาล์ว (นิ้ว): ${valveSizeInches.toFixed(1)} นิ้ว (ใช้ค่าปัดเศษ ${valveSizeInchesRoundedForLookup} นิ้ว)</p>`;
-                        debugInfo += `<p>ค่าจากตาราง Class V (ml/min): ${classVLeakage.toFixed(4)}</p>`;
-
-
-                    } else if (leakClass === 'VI') {
-                        // For Class VI, use the rounded inch value for direct lookup
-                        if (!ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES.hasOwnProperty(valveSizeInchesRoundedForLookup.toString())) {
-                            errorMessageP.textContent = `สำหรับ ANSI/FCI Class VI, ขนาดวาล์ว ${valveSizeInches} นิ้ว (ปัดเศษเป็น ${valveSizeInchesRoundedForLookup} นิ้ว) ไม่ตรงกับขนาดมาตรฐานที่ระบุ. โปรดใช้ขนาดดังนี้ (นิ้ว): ${Object.keys(ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES).join(', ')}`;
-                            resultDiv.classList.remove('hidden');
-                            return;
-                        }
-                        
-                        const classVILeakage = ANSI_FCI_LEAKAGE_ML_PER_MIN_CLASS_VI_INCHES[valveSizeInchesRoundedForLookup.toString()];
-                        if (classVILeakage === undefined) { // Should not happen with hasOwnProperty check
-                            errorMessageP.textContent = `ไม่พบค่าการรั่วไหลสำหรับ ANSI/FCI Class VI และขนาดวาล์ว ${valveSizeInchesRoundedForLookup} นิ้ว`;
-                            resultDiv.classList.remove('hidden');
-                            return;
-                        }
-                        permissibleLeakageMlPerMin = classVILeakage; // Directly use the value from table (ml/min at 3.5 bar)
-                        permissibleLeakageM3PerHour = permissibleLeakageMlPerMin / 16666.666667;
-
-                        debugInfo += `<p>การคำนวณ Class VI (ANSI/FCI)</p>`;
-                        debugInfo += `<p>ขนาดวาล์ว (นิ้ว): ${valveSizeInches.toFixed(1)} นิ้ว (ใช้ค่าปัดเศษ ${valveSizeInchesRoundedForLookup} นิ้ว)</p>`;
-                        debugInfo += `<p>ค่าจากตาราง Class VI (ml/min): ${classVILeakage.toFixed(4)}</p>`;
-                    }
-                } else if (['II', 'III', 'IV', 'IV-S1', 'I'].includes(leakClass)) {
-                    // Validate Cv for ANSI/FCI
-                    if (isNaN(Cv_gpm) || Cv_gpm <= 0) {
-                        errorMessageP.textContent = 'โปรดป้อนค่า Cv ที่ถูกต้องและเป็นค่าบวกสำหรับ ANSI/FCI (ยกเว้น Class V, VI)';
-                        resultDiv.classList.remove('hidden');
-                        return;
-                    }
-                    debugInfo += `<p>Cv: ${Cv_gpm}</p>`;
-
-                    const XT = FIXED_XT_ANSI_FCI; // XT is fixed for ANSI/FCI
-
-                    // Constants from Excel Sheet for ANSI/FCI (these are always used for Q_lmin if applicable)
-                    const BAR_TO_PSI = 14.50377; 
-                    const AMBIENT_PRESSURE_PSI = 14.7; 
-                    const SPECIFIC_HEAT_K = 1.40; 
-                    const SPECIFIC_HEAT_FACTOR_FK = 1.00; 
-                    const COMPRESSIBILITY_FACTOR_Z1 = 1.00; 
-                    const REFERENCE_TEMP_R = 518.67; 
-
-                    let gasMolecularWeight; 
-                    if (gasMedium === 'air') {
-                        gasMolecularWeight = 28.97; 
-                    } else if (gasMedium === 'nitrogen') {
-                        gasMolecularWeight = 28.01; 
-                    } else {
-                        errorMessageP.textContent = 'ชนิดของก๊าซไม่ถูกต้องสำหรับ ANSI/FCI';
-                        resultDiv.classList.remove('hidden');
-                        return;
-                    }
-
-                    // Pressures calculation based on Excel (D24, D25, D26)
-                    const inletPressure_psia_D24 = inletPressureGauge * BAR_TO_PSI; 
-                    const outletPressure_psia_D25 = outletPressureGauge * BAR_TO_PSI; 
-                    const pressureDrop_psia_D26 = inletPressure_psia_D24 - outletPressure_psia_D25; 
-                    
-                    debugInfo += `<p>D24 (Inlet Pressure, psia): ${inletPressure_psia_D24.toFixed(4)} psia</p>`;
-                    debugInfo += `<p>D25 (Outlet Pressure, psia): ${outletPressure_psia_D25.toFixed(4)} psia</p>`;
-                    debugInfo += `<p>D26 (Pressure Drop, psia): ${pressureDrop_psia_D26.toFixed(4)} psia</p>`;
-
-                    // Calculate X (Differential pressure ratio) based on Excel (D14)
-                    let X_D14;
-                    if ((inletPressure_psia_D24 + AMBIENT_PRESSURE_PSI) === 0) {
-                        X_D14 = 0; 
-                    } else {
-                        X_D14 = pressureDrop_psia_D26 / (inletPressure_psia_D24 + AMBIENT_PRESSURE_PSI);
-                    }
-                    debugInfo += `<p>X (D14 Calculated): ${X_D14.toFixed(6)}</p>`;
-                    debugInfo += `<p>XT (Fixed): ${XT}</p>`; 
-
-                    // Determine Xsizing (D19 in Excel)
-                    let XSIZING_D19 = Math.min(X_D14, XT);
-                    debugInfo += `<p>XSIZING (D19): ${XSIZING_D19.toFixed(6)}</p>`;
-                    
-                    // Calculate Expansion factor Y (D20 in Excel)
-                    let Y_D20 = 1 - (XSIZING_D19 / (3 * XT));
-                    debugInfo += `<p>Y (D20 Expansion factor): ${Y_D20.toFixed(6)}</p>`;
-
-                    if (Y_D20 < 0.66) { 
-                        errorMessageP.textContent = 'เกิดข้อผิดพลาดในการคำนวณ Y ค่าไม่ถูกต้อง (Y < 0.66)';
-                        resultDiv.classList.remove('hidden');
-                        return;
-                    }
-
-                    const T320_CONSTANT = 469.380; 
-                    
-                    // Calculate Flow rate capacity Q (l/min) using the Excel formula string
-                    let Q_lmin = (T320_CONSTANT * Cv_gpm * inletPressure_psia_D24 * AMBIENT_PRESSURE_PSI) * Y_D20 * Math.sqrt(SPECIFIC_HEAT_K / (gasMolecularWeight * REFERENCE_TEMP_R * COMPRESSIBILITY_FACTOR_Z1)) * 0.4719;
-                    
-                    debugInfo += `<p>Q (Flow rate capacity): ${Q_lmin.toFixed(4)} l/min</p>`; // Show Q for these classes
-                    
-                    let leakageFactor_D27;
-                    if (leakClass === 'I') {
-                        leakageFactor_D27 = parseFloat(classIFactorInput.value);
-                        if (isNaN(leakageFactor_D27) || leakageFactor_D27 < 0) {
-                            errorMessageP.textContent = 'โปรดป้อนปัจจัยการรั่วไหลที่ถูกต้องสำหรับ Class I';
-                            resultDiv.classList.remove('hidden');
-                            return;
-                        }
-                    } else {
-                        leakageFactor_D27 = ANSI_FCI_LEAK_CLASS_FACTORS[leakClass];
-                    }
-
-                    debugInfo += `<p>Leak class factor (D27): ${leakageFactor_D27}</p>`;
-
-                    if (leakageFactor_D27 === null || leakageFactor_D27 === undefined) {
-                        errorMessageP.textContent = 'คลาสการรั่วไหลไม่ถูกต้องหรือไม่มีปัจจัยกำหนดไว้สำหรับ ANSI/FCI';
-                        resultDiv.classList.remove('hidden');
-                        return;
-                    }
-
-                    // Calculate Max. Leakage (l/min)
-                    const permissibleLeakageLMin = Q_lmin * leakageFactor_D27;
-                    permissibleLeakageMlPerMin = permissibleLeakageLMin * 1000; 
-                    permissibleLeakageM3PerHour = permissibleLeakageLMin * 0.06; 
-                    debugInfo += `<p>การคำนวณ Class ${leakClass} (ANSI/FCI)</p>`;
-                } else {
-                    errorMessageP.textContent = 'คลาสการรั่วไหลไม่ถูกต้องสำหรับ ANSI/FCI'; // Should not happen with current dropdowns
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-            } else if (selectedStandard === 'ISO_5208') {
-                // ISO 5208 Third edition calculation
-                if (isNaN(valveSizeInches) || valveSizeInches <= 0) {
-                    errorMessageP.textContent = 'โปรดป้อนขนาดวาล์ว (Seat Diameter) ที่ถูกต้องสำหรับ ISO 5208';
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-                const valveSizeInchesRounded = Math.round(valveSizeInches * 10) / 10; // Round to 1 decimal place for 1.5, 2.5 etc.
-
-                if (!STANDARD_VALVE_INCH_SIZES.includes(valveSizeInchesRounded)) {
-                    errorMessageP.textContent = `ขนาดวาล์ว ${valveSizeInches} นิ้ว (ปัดเศษเป็น ${valveSizeInchesRounded} นิ้ว) ไม่ตรงกับขนาดมาตรฐานในตาราง ISO. โปรดใช้ขนาดดังนี้ (นิ้ว): ${STANDARD_VALVE_INCH_SIZES.join(', ')}`;
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-                const isoLeakage = ISO_5208_LEAKAGE_ML_PER_MIN_INCHES[leakClass][valveSizeInchesRounded.toString()];
-                if (isoLeakage === undefined) {
-                    errorMessageP.textContent = `ไม่พบค่าการรั่วไหลสำหรับ ISO 5208 Rate ${leakClass} และขนาดวาล์ว ${valveSizeInchesRounded} นิ้ว`;
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-                permissibleLeakageMlPerMin = isoLeakage;
-                permissibleLeakageM3PerHour = permissibleLeakageMlPerMin / 16666.666667;
-
-                debugInfo += `<p>มาตรฐาน: ISO 5208</p>`;
-                debugInfo += `<p>ขนาดวาล์ว (นิ้ว): ${valveSizeInches.toFixed(1)} นิ้ว</p>`;
-                debugInfo += `<p>คลาสการรั่วไหล: ${leakClass}</p>`;
-                debugInfo += `<p>ความดันขาเข้า (Gauge): ${inletPressureGauge.toFixed(2)} bar (ฟิก 5.0)</p>`;
-                debugInfo += `<p>ความดันขาออก (Gauge): ${outletPressureGauge.toFixed(2)} bar (ฟิก 0)</p>`;
-
-
-            } else if (selectedStandard === 'API_598') {
-                // API 598 Eighth edition calculation
-                if (isNaN(valveSizeInches) || valveSizeInches <= 0) {
-                    errorMessageP.textContent = 'โปรดป้อนขนาดวาล์ว (Seat Diameter) ที่ถูกต้องสำหรับ API 598';
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-                const valveSizeInchesRounded = Math.round(valveSizeInches * 10) / 10; // Round to 1 decimal place
-
-                if (!STANDARD_VALVE_INCH_SIZES.includes(valveSizeInchesRounded)) {
-                    errorMessageP.textContent = `ขนาดวาล์ว ${valveSizeInches} นิ้ว (ปัดเศษเป็น ${valveSizeInchesRounded} นิ้ว) ไม่ตรงกับขนาดมาตรฐานในตาราง API 598. โปรดใช้ขนาดดังนี้ (นิ้ว): ${STANDARD_VALVE_INCH_SIZES.join(', ')}`;
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-                // Check Test Pressure range for API 598 Low Pressure Test
-                const BAR_TO_PSI = 14.50377; // Define here for API specific calculation as it's not universally needed
-                const inletPressurePsig = inletPressureGauge * BAR_TO_PSI; // Convert input bar to psig
-                
-                if (inletPressurePsig < 60 || inletPressurePsig > 100) {
-                    errorMessageP.textContent = `สำหรับ API 598 Low Pressure Test, ความดันขาเข้า (Gauge) ต้องอยู่ระหว่าง 60-100 psig (ปัจจุบัน: ${inletPressurePsig.toFixed(2)} psig)`;
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-
-                const apiLeakage = API_598_LEAKAGE_ML_PER_MIN_INCHES[valveSizeInchesRounded.toString()];
-                if (apiLeakage === undefined) {
-                    errorMessageP.textContent = `ไม่พบค่าการรั่วไหลสำหรับ API 598 และขนาดวาล์ว ${valveSizeInchesRounded} นิ้ว`;
-                    resultDiv.classList.remove('hidden');
-                    return;
-                }
-                permissibleLeakageMlPerMin = apiLeakage;
-                permissibleLeakageM3PerHour = permissibleLeakageMlPerMin / 16666.666667;
-
-                debugInfo += `<p>มาตรฐาน: API 598</p>`;
-                debugInfo += `<p>ขนาดวาล์ว (นิ้ว): ${valveSizeInches.toFixed(1)} นิ้ว</p>`;
-                debugInfo += `<p>คลาสการรั่วไหล: ${leakClass}</p>`;
-                debugInfo += `<p>ความดันขาเข้า (Gauge): ${inletPressureGauge.toFixed(2)} bar (ฟิก 5.0)</p>`;
-                debugInfo += `<p>ความดันขาออก (Gauge): ${outletPressureGauge.toFixed(2)} bar (ฟิก 0)</p>`;
-                debugInfo += `<p>ความดันขาเข้า (psig): ${inletPressurePsig.toFixed(2)} psig (ต้อง 60-100 psig)</p>`;
-            }
-
-            // Display results
-            permissibleLeakageCubicMeterP.textContent = permissibleLeakageM3PerHour.toFixed(7);
-            permissibleLeakageMlPerMinP.textContent = permissibleLeakageMlPerMin.toFixed(4);
-            
-            // Display debug information
-            debugDetailsDiv.innerHTML = debugInfo;
-            
-            resultDiv.classList.remove('hidden');
-        }
+        logDebug("Script initialized successfully");
     </script>
 </body>
 </html>
